@@ -7,7 +7,17 @@ It's an internal SNS for employees of same company. Actually, we use this projec
 
 #Dependency
 mysql
+
+MySQL-python
+
 quixote 1.0
+
+beansdb
+
+redis
+
+juggernaut
+
 wand (http://code.dapps.douban.com/bear/wand.git)
 
 #Run

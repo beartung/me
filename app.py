@@ -6,9 +6,9 @@ import quixote
 
 from webapp import views as controllers
 from quixote.qwip import QWIP
-#from gzipper import make_gzip_middleware
+from libs.gzipper import make_gzip_middleware
 #from libs import show_performance_metric
-#from config import UPLOAD_DIR
+from config import UPLOAD_DIR
 import time
 
 class Publisher(quixote.Publisher):
@@ -41,5 +41,4 @@ class Publisher(quixote.Publisher):
 def create_publisher():
     return Publisher(controllers)
 
-app = QWIP(create_publisher())
-#app = make_gzip_middleware(QWIP(create_publisher()))
+app = make_gzip_middleware(QWIP(create_publisher()))
