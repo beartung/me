@@ -4,3 +4,13 @@ It's an internal SNS for employees of same company. Actually, we use this projec
 #Screen shots
 
 ![Home](https://raw.github.com/beartung/me/master/screenshots/screen_shot.png)
+
+#Dependency
+mysql
+quixote 1.0
+wand (http://code.dapps.douban.com/bear/wand.git)
+
+#Run
+sudo nginx -c /home/user/me/etc/nginx.conf
+
+gunicorn -w 4 app:app -b 127.0.0.1:8000
