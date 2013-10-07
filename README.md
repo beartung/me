@@ -21,6 +21,12 @@ juggernaut
 wand (http://code.dapps.douban.com/bear/wand.git)
 
 #Run
+create database me
+
+mysql -ubear -Dme < db.sql
+
+ln -s /home/user/me/static /tmp/me-static/static
+
 sudo nginx -c /home/user/me/etc/nginx.conf
 
 gunicorn -w 4 app:app -b 127.0.0.1:8000

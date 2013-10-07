@@ -8,3 +8,6 @@ _q_exports = []
 
 def _q_index(req):
     return "Hello Me!"
+
+def login(req):
+    return ""
