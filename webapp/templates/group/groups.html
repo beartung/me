@@ -1,0 +1,22 @@
+<%inherit file="/base.html" />
+<%! 
+from webapp.models.consts import Cate
+from webapp.models.group import Group
+%>
+<%def name="title()">Group</%def>
+<div class="container">
+    <h2>花名册群组<sub>（<a href="/group/">创建新群组</a>）</sub></h2>
+    <hr>
+    %for g in groups:
+    <section>
+    <a href="${g.path}" class="pull-left" style="margin-right:5px;"><img src="${g.dynamic_photo(80, 80)}"></a>
+    <h4><a href="${g.path}">${g.name}</a></h4>
+    <p class="muted">${g.n_member}个${g.m_name} · ${g.n_thread}篇帖子</p>
+    <p>
+    %for t in g.tags:
+    <a href="${t.path}"><span class="label">${t.name}</span></a>
+    %endfor
+    </p>
+    </section>
+    %endfor
+</div>

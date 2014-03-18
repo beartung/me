@@ -1,0 +1,189 @@
+<%!
+from libs import cdn
+from webapp.views import NAV_TABS
+%>
+<%namespace name="utils" file="/utils.html" />
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <title>${self.title()} · Me</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" />
+        <link href="/static/css/bootstrap-2.3.1.min.css" type="text/css" rel="stylesheet">
+        <link href="/static/css/bootstrap-responsive-2.3.1.min.css" type="text/css" rel="stylesheet">
+        <link href="/static/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+        <link href="/static/css/fontello.1.css" type="text/css" rel="stylesheet">
+        <link href="${cdn.css_url('/static/css/webapp.css', isfilepath=False)}" type="text/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/static/css/lib/tagsug.css">
+        <script src="/static/js/lib/do.js" data-cfg-corelib="/static/js/jquery-1.9.1.min.js"></script>
+        ${self.head_script()}
+        <%block name="extra_head"></%block>
+    </head>
+    <body>
+        ${self.nav()}
+        <div class="main-content">
+	        ${self.body()}
+        </div>
+    <script src="/static/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/static/js/jquery.masonry.min.js" type="text/javascript"></script>
+    ###<script src="/static/js/jquery.infinitescroll.1.min.js" type="text/javascript"></script>
+    <script src="/static/js/lib/mustache.js"></script>
+    <script src="/static/js/lib/tagsug.js"></script>
+    <script src="${cdn.js_url('/static/js/webapp.js', isfilepath=False)}" type="text/javascript"></script>
+    <script>
+    if($('.me-comm')){
+        var meCommForm = $('.me-comm');
+        var highlighter = meCommForm.find('p.mention-highlighter');
+        var meCommTextarea = $('.me-comm-textarea');
+        //console.log(meCommTextarea);
+        meCommTextarea.tagsug({
+            url: 'https://api.douban.com/shuo/in/complete?alt=xd&count={max}&callback=?&word=',
+            highlight: true,
+            highlighter: highlighter
+        });
+    }
+	var $container = $('.columns');
+	
+	$container.imagesLoaded( function(){
+	  $container.masonry({
+	    itemSelector : '.columns-item'
+	  });
+	});
+
+$("body").delegate(".blog-comment-input", "focus", function()
+{
+    /*to make this flexible, I'm storing the current width in an attribute*/
+    $(this).parent().addClass("blog-comment-action-expand");
+});
+$("body").delegate(".blog-comment-cancel", "click", function()
+{
+    /*to make this flexible, I'm storing the current width in an attribute*/
+    $(this).parent().removeClass("blog-comment-action-expand");
+    $(this).prevAll(".hide").hide();
+    $(this).prevAll(".blog-comment-input").val("");
+});
+
+###    $container.infinitescroll({
+###      navSelector  : '#page-nav',    // selector for the paged navigation 
+###      nextSelector : '#page-nav a',  // selector for the NEXT link (to page 2)
+###      itemSelector : '.columns-item',     // selector for all items you'll retrieve
+###      loading: {
+###          finishedMsg: 'No more pages to load.',
+###          img: 'http://i.imgur.com/6RMhx.gif'
+###        }
+###      },
+###      // trigger Masonry as a callback
+###      function( newElements ) {
+###        // hide new items while they are loading
+###        var $newElems = $( newElements ).css({ opacity: 0 });
+###        // ensure that images load before adding to masonry layout
+###        $newElems.imagesLoaded(function(){
+###          // show elems now they're ready
+###          $newElems.animate({ opacity: 1 });
+###          $container.masonry( 'appended', $newElems, true ); 
+###        });
+###      }
+###    );
+	$('.fbtimeline').masonry({itemSelector : '.item',});
+    $(".card-tooltip").tooltip();
+	</script>
+    ${self.body_script()}
+    <br>
+    <br>
+    </body>
+</html>
+
+<%def name="title()"></%def>
+<%def name="head_script()"></%def>
+<%def name="body_script()"></%def>
+
+<%def name="nav()">
+%if req.user:
+<div class="main-sidebar">
+	<div class="sidebar-header clearfix">
+   		<a class="btn-navcollapse" data-toggle="collapse" data-target=".nav-collapse"><i class="icon icon-th-large"></i></a>
+	    <a class="brand" href="/about">豆瓣花名册</a>
+        <!-- _performtips_ -->
+<!--
+	    <ul class="nav nav-pills">
+	    	<li class="dropdown">
+	       		<a data-toggle="dropdown" href="/notifications" onclick="return read_notify('')">
+	                %if req.n_notify > 0:
+		                <label id="notify-num" class="label label-important">${req.n_notify}</label>
+	                %else:
+	                	<label id="notify-num" class="label">0</label>
+	                %endif
+	            </a>
+			    <ul id="notify-menu" class="dropdown-menu main-notify">
+	                %for n in req.card.notifications[:max(5,req.n_notify)]:
+	                ${utils.card_notify(n)}
+	                %endfor
+				    <li class="notify-see-all"><a href="/notifications">全部提醒</a></li>
+				    <li class="divider notify-user-action"></li>
+				    <li class="notify-user-action"><a data-toggle="dropdown" href="/mine">${req.user.name}</a></li>
+				    <li class="notify-user-action"><a href="/make"><i class="icon-edit"></i> 修改资料</a></li>
+				    <li class="notify-user-action"><a href="${req.logout_url}"><i class="icon-signout"></i> 登出</a>
+			    </ul>
+	    	</li>
+	    	<li class="dropdown user-action">
+	        	<a data-toggle="dropdown" href="/mine"><span class="username">${req.user.name}</span> <i class="icon-user"></i><b class="caret"></b></a>
+			    <ul class="dropdown-menu">
+				    <li><a href="/make"><i class="icon-edit"></i> 修改资料</a></li>
+				    <li><a href="${req.logout_url}"><i class="icon-signout"></i> 登出</a>
+			    </ul>
+			</li>
+		</ul>
+-->
+	</div>
+	<div class="nav-collapse">
+    <form class="sidebar-form" method="get" action="/search">
+        <input type="text" name="q" placeholder="搜索姓名，豆瓣id，邮箱">
+##            <button type="submit" class="btn"><i class="icon-search"></i></button>
+		<i class="icon icon-white icon-search"></i>
+    </form>
+    
+    <div class="tabbable"> <!-- Only required for left/right tabs -->
+  <ul class="nav nav-tabs">
+    <li class="active"><a href="#tab1" data-toggle="tab"><i class="icon-home"></i></a></li>
+    <li><a href="#tab2" data-toggle="tab" onclick="return read_notify('')">
+        %if req.n_notify > 0:
+        <span id="notify-num" class="important">${req.n_notify}</span>
+        %else:
+        <span id="notify-num">0</span>
+        %endif
+    </a></li>
+    <li><a href="#tab3" data-toggle="tab"><img class="avatar-small" src="${req.user.picture(default=True)}"/></a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane active" id="tab1">
+    <ul class="unstyled sidebar-nav">
+        %for p, n, i, f in NAV_TABS:
+            %if req.nav == p:
+            <li class="active">
+            %else:
+            <li>
+            %endif
+            <a href="${p}"><i class="icon-${i}"></i> <span>${n}</span><i class="flag">${f}</i></a>
+            </li>
+        %endfor
+    </ul>
+    </div>
+    <div class="tab-pane" id="tab2">
+        %for n in req.card.notifications[:max(5,req.n_notify)]:
+        ${utils.card_notify(n)}
+        %endfor
+    </div>
+    <div class="tab-pane" id="tab3">
+	    <ul class="unstyled sidebar-nav">
+	    	<li><a href="/mine"><i class="icon-user"></i> ${req.user.name}</a></li>
+		    <li><a href="/make"><i class="icon-edit"></i> 修改资料</a></li>
+		    <li><a href="${req.logout_url}"><i class="icon-signout"></i> 登出</a>
+		</ul>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+%endif
+</%def>

@@ -1,0 +1,219 @@
+<%inherit file="/base.html" />
+<%def name="title()">Timeline</%def>
+##<div id="my-timeline"></div>
+<style>
+		.fbtimeline {
+			width: 884px;
+			margin-left: -20px;
+			margin-right: -20px;
+		}
+
+		.fbtimeline .item {
+			width: 400px;
+			margin: 0 20px 20px;
+			float: left;
+			background-color: #fff;
+			border: 1px solid #e2e4e4;
+			min-height: 50px;
+			text-align: justify;
+			word-wrap: break-word;
+			border-radius: 3px;
+			-webkit-border-radius: 3px;
+			-moz-border-radius: 3px;
+			box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+		}
+		.fbtimeline .line{
+			margin: 0 auto;
+			background-color: #e7e9e9;
+			display: block;
+			float: left;
+			height: 100%;
+			left: 440px;
+			position: absolute;
+			width: 4px;
+		}
+		
+		.fbtimeline .line a{
+			position: absolute;
+			bottom: -24px;
+			width: 72px;
+			left: -48px;
+		}		
+
+		.fbtimeline .item .hd,
+		.fbtimeline .item .bd{
+			margin: 12px;
+		}
+		.fbtimeline .item .hd{
+			border-bottom: 1px solid #f2f2f2;
+		}
+		
+		.fbtimeline .item .hd img{
+			float: left;
+			margin-right: 10px;
+		}
+		.fbtimeline .item .bd .photo{
+			float: left;
+			width: 200px;
+			min-height: 200px;
+			margin: 0 10px 10px 0;	
+		}
+		
+		.fbtimeline .item .rightCorner{
+		  display: block;
+		  float: right;
+		  width: 0;
+		  height: 0;
+		  margin-top: 8px;
+		  margin-right: -8px;
+		  border-color: transparent;
+		  border-left-color: #d7d9d9;
+		  border-style: solid;
+		  border-width: 8px 0 8px 8px;
+		  content: " ";
+		}
+		.fbtimeline .item .rightCorner:after{
+		  display: block;
+		  float: right;
+		  width: 0;
+		  height: 0;
+		  margin-top: -8px;
+		  margin-right: 1px;
+		  border-color: transparent;
+		  border-left-color: white;
+		  border-style: solid;
+		  border-width: 8px 0 8px 8px;
+		  content: " ";
+		}
+		.fbtimeline .item .rightCorner:before{
+		  display: block;
+		  float: right;
+		  width: 4px;
+		  height: 4px;
+		  background: #b7b9b9;
+		  margin-top: -2px;
+		  margin-right: -15px;
+		  content: " ";
+		}
+		.fbtimeline .item .leftCorner{
+		  display: block;
+		  float: left;
+		  width: 0;
+		  height: 0;
+		  margin-top: 8px;
+		  margin-left: -8px;
+		  border-color: transparent;
+		  border-right-color: #d7d9d9;
+		  border-style: solid;
+		  border-width: 8px 8px 8px 0;
+		  content: " ";
+		}
+		.fbtimeline .item .leftCorner:after{
+		  display: block;
+		  float: left;
+		  width: 0;
+		  height: 0;
+		  margin-top: -8px;
+		  margin-left: 1px;
+		  border-color: transparent;
+		  border-right-color: white;
+		  border-style: solid;
+		  border-width: 8px 8px 8px 0;
+		  content: " ";
+		}
+		.fbtimeline .item .leftCorner:before{
+		  display: block;
+		  float: left;
+		  width: 4px;
+		  height: 4px;
+		  background: #b7b9b9;
+		  margin-top: -2px;
+		  margin-left: -15px;
+		  content: " ";
+		}
+
+</style>
+<ul class="nav nav-pills">
+    <li 
+    %if year == now_year:
+    class="active"
+    %endif
+    >
+    <a href="/timeline">最新入职</a>
+  </li>
+  %for y in years:
+  <li
+      %if year == str(y):
+      class="active"
+      %endif
+  ><a href="/timeline?year=${y}"
+      >${y}</a></li>
+  %endfor
+</ul>
+<div class="fbtimeline">
+    %for d in cards:
+    <div class="item">
+        <div class="hd">
+            <img class="avatar" src="${d.icon}">
+            <h4><a href="${d.path}">${d.screen_name}/${d.name}</a></h4>
+            <p>${d.join_time and d.join_time.strftime('%Y.%m.%d')}</p>
+            <p>
+            %if d.skype:
+            <a href="skype:${d.skype}?chat"><i class="icon-ello-skype"></i>${d.skype}</a>
+            %endif
+            %if d.email:
+            &nbsp;
+            <a href="mailto:${d.email}"><i class="icon-envelope-alt"></i> ${d.email.replace("@douban.com", "")}</a>
+            %endif
+            %if d.department:
+            &nbsp;
+            <span class="text-info">
+            ${d.department}/${d.position}
+            </span>
+            %endif
+            </p>
+        </div>
+        <div class="bd">
+            <div class="photo"><img src="${d.photo}" /></div>
+            <p>${d.selfintro.replace('\n', '<br>')|n}</p>
+        </div>
+        <div id="ft">
+        </div>
+    </div>
+    %endfor
+</div>
+
+<%def name="head_script()">
+<script type="text/javascript" src="/static/js/storyjs-embed.js"></script>
+</%def>
+<%def name="body_script()">
+<script>
+$(function () {
+    createStoryJS({
+        lang:       'en',
+        type:       'timeline',
+        width:      '100%',
+        height:     '600',
+        source:     '/j/timeline',
+        embed_id:   'my-timeline'
+    });
+});
+
+//injecting arrow points
+function Arrow_Points(){
+  var s = $(".fbtimeline").find(".item");
+  $.each(s,function(i,obj){
+    var posLeft = $(obj).css("left");
+    if(posLeft == "0px"){
+      html = "<span class='rightCorner'></span>";
+      $(obj).prepend(html);
+    } else {
+      html = "<span class='leftCorner'></span>";
+      $(obj).prepend(html);
+    }
+  });
+}
+Arrow_Points();
+
+</script>
+</%def>

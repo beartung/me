@@ -1,0 +1,17 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+
+<%def name="title()">Badage</%def>
+<div class="container">
+    <h2>获得${name}徽章的同学们</h2>
+    <p><i class="${badage.icon} me-badage"></i> ${name}徽章：${badage.intro}</p>
+    <div class="columns">
+        %if cards:
+            %for card in cards:
+	            ${card_ui.card_small(card)}
+            %endfor
+        %else:
+        <p>Oops... 现在还没有同学获得这个徽章啊！</p>
+        %endif
+    </div>
+</div>

@@ -14,9 +14,6 @@ def show_performance_metric(request, output):
     if idx > 0:
         pt = int((time.time() - request.start_time) * 1000)
         cls = pt > 250 and 'red' or pt > 100 and 'orange' or 'green'
-        #link = get_profile_link(request.original_uri)
-        #link += '#profile_log'
-        #block = '<a href="%s"><span style="color:%s"> %d ms </span></a>' % (link, cls, pt)
         block = '<li class="hidden-phone"><a style="color:%s"> %d ms </a></li>' % (cls, pt)
         output = (output[:idx] + block + output[idx+len(PERFORMANCE_METRIC_MARKER):])
     return output

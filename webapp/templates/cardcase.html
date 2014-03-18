@@ -1,0 +1,19 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+<%namespace name="utils" file="/utils.html" />
+
+<%def name="title()">Cardcase</%def>
+<div class="container">
+    <div class="columns">
+        %if cards:
+            %for card in cards:
+	            ${card_ui.card_small(card)}
+            %endfor
+        %else:
+            <p>Oops... 你还没收藏任何卡片哦 <a type="button" class="btn" href="/"><i class="icon-home"></i> 返回首页</a></p>
+        %endif
+    </div>
+    %if cards:
+    ${utils.pager('/cardcase?', total, start, limit)}
+    %endif
+</div>

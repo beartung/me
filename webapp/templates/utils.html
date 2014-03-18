@@ -1,0 +1,324 @@
+<%!
+from webapp.models.event import EventPhoto
+from webapp.models.card import Card
+from webapp.models.badage import Badage, Award
+from webapp.models.blog import Blog
+from webapp.models.question import Question, Answer
+from webapp.models.group import Group
+%>
+
+
+<%def name="card_notify(n)">
+<%
+bid = n.extra.get('blog_id', '')
+cid = n.extra.get('comment_id', 0)
+card_id = n.extra.get('card_id', 0)
+pid = n.extra.get('photo_id', 0)
+photo = EventPhoto.get(pid)
+event = photo and photo.event
+d = Card.get(card_id)
+b = Blog.get(bid)
+if bid and not b:
+    n.delete()
+    return ''
+if pid and not photo:
+    n.delete()
+    return ''
+%>
+
+%if n.flag == n.FLAG_NEW:
+<li class="notify-new">
+%else:
+<li>
+%endif
+
+%if n.ntype == n.TYPE_ANSWER:
+<a href="${b and b.path}">
+<i class="icon-key"></i>
+${n.author.name}回答了你的提问~
+
+%elif n.ntype == n.TYPE_QUESTION:
+<%
+qid = n.extra.get('question_id', 0)
+question = Question.get(qid)
+%>
+<a href="${n.card.path}#answers">
+<i class="icon-question-sign"></i>
+%if question.is_anonymous:
+某厂工
+%else:
+${n.author.name}
+%endif
+给你提了新问题
+
+%elif n.ntype == n.TYPE_AWARD_VOTED:
+<%
+aid = n.extra.get('badage_id', 0)
+award = Award.get(aid)
+%>
+%if b:
+<a href="${b and b.path}">
+%else:
+<a href="${n.author_card.path}">
+%endif
+<i class="icon-star"></i> [${award.name}]<strong>${n.author.name}</strong> 投了你一票！
+
+%elif n.ntype == n.TYPE_ADD_GROUP:
+<%
+gid = n.extra.get('group_id', 0)
+group = Group.get(gid)
+%>
+<a href="${group.path}"><i class="icon-group"></i> <strong>${n.author.name}</strong> 把你拉进了${group.name}群组
+%elif n.ntype == n.TYPE_BLOG_LIKE:
+<a href="${b and b.path}"><i class="icon-heart"></i> <strong>${n.author.name}</strong> 赞了你的${b.type_name}
+%elif n.ntype == n.TYPE_BLOG_UNLIKE:
+<a href="${b and b.path}"><i class="icon-heart"></i> 有人踩了你的${b.type_name}= =|||
+
+%elif n.ntype == n.TYPE_LIKE:
+<a href="${n.author_card and n.author_card.path}"><i class="icon-heart"></i> <strong>${n.author.name}</strong> 收藏了你的卡片
+    
+%elif n.ntype == n.TYPE_COMMENT:
+<a href="${n.card.path}#comment_${cid}"><i class="icon-comment-alt"></i> <strong>${n.author.name}</strong> 在你的卡片里留言了哦~
+
+%elif n.ntype == n.TYPE_BLOG_REPLY:
+
+<a href="/blog/${bid}/#comment_${cid}"><i class="icon-comment-alt"></i> 你回复的${b.type_name}有了新回复哦~
+
+%elif n.ntype == n.TYPE_BLOG_COMMENT:
+<a href="/blog/${bid}/#comment_${cid}"><i class="icon-comment-alt"></i> <strong>${n.author.name}</strong> 回复了你的${b.type_name}哦~
+
+%elif n.ntype == n.TYPE_MENTION:
+<a href="${d.path}#comment_${cid}"><i class="icon-comment-alt"></i><strong>${n.author.name}</strong> 在给 
+%if card_id == n.card_id:
+你的卡片留言中提到了你~
+%else:
+<strong>${d.screen_name}</strong>的卡片里留言中提到你了哦~。
+%endif
+
+%elif n.ntype == n.TYPE_BLOG_MENTION:
+<a href="${b.path}"><i class="icon-comment-alt"></i><strong>${n.author.name}</strong> 在${b.type_name}中提到你了哦~
+
+%elif n.ntype == n.TYPE_BLOG_COMMENT_MENTION:
+<a href="${b.path}#comment_${cid}"><i class="icon-comment-alt"></i><strong>${n.author.name}</strong> 在${b.type_name}的回复里中提到你了哦~
+
+%elif n.ntype == n.TYPE_PHOTO_LIKE:
+<a href="${photo.path}"><i style="color:red" class="icon-heart"></i> <strong>${n.author.name}</strong> 给你在<strong>${event.name}</strong>上传的照片+ 1了！
+%elif n.ntype == n.TYPE_PHOTO_TAG:
+<a href="${photo.path}"><i style="color:red" class="icon-circle-blank"></i> <strong>${n.author.name}</strong> 在<strong>${event.name}</strong>上传的照片里圈了你！
+
+%elif n.ntype == n.TYPE_PHOTO_COMMENT:
+<a href="${photo.path}#comment_${cid}"><i class="icon-comment-alt"></i> <strong>${n.author.name}</strong> 给你在<strong>${event.name}</strong>上传的照片里留言了哦~
+%elif n.ntype == n.TYPE_PHOTO_COMMENT_MENTION:
+<a href="${photo.path}#comment_${cid}"><i class="icon-comment-alt"></i> <strong>${n.author.name}</strong> 在<strong>${event.name}</strong>的照片留言里提到你了哦~
+
+%elif n.ntype == n.TYPE_TAG:
+<%
+tags = n.extra.get('tags').encode('utf-8').split()
+%>
+<a href="${n.card.path}"><i class="icon-tags"></i> 你的卡片有了新的标签：<br>
+%for t in tags:
+<span class="card-tag label">${t}</span>
+%endfor
+
+%elif n.ntype == n.TYPE_REQUEST_PHOTO:
+<a href="${n.author_card.path}"><i class="icon-picture"></i> <strong>${n.author.name}</strong> 求你的真相照片哦~ 传一张吧，拜托了！m(_ _)m 
+
+%elif n.ntype == n.TYPE_REQUEST_CHANGE_PHOTO:
+<a href="${n.author_card.path}"><i class="icon-picture"></i> <strong>${n.author.name}</strong> 觉的你真相照片不真！ 换一张吧，拜托了！m(_ _)m 
+
+
+%elif n.ntype == n.TYPE_BADAGE:
+<%
+bd = Badage.get(n.author_id)
+%>
+    %if bd:
+    <a href="/badage/${bd.name}" title="${bd.intro}"><i class="icon-trophy"></i> 你得到了一枚<i class="${bd.icon} me-badage"></i>${bd.name} 徽章，恭喜你了！
+    %endif
+%endif
+<span class="notify-time muted">${n.rtime}</span></a>
+
+
+%if n.ntype in [ n.TYPE_REQUEST_PHOTO, n.TYPE_REQUEST_CHANGE_PHOTO]:
+<a class="upload btn-small" href="/make">上传真相</a>
+%endif
+</li>
+</%def>
+
+<%def name="card_notify_line(n, last_time=None)">
+<%
+bid = n.extra.get('blog_id', '')
+cid = n.extra.get('comment_id', 0)
+card_id = n.extra.get('card_id', 0)
+pid = n.extra.get('photo_id', 0)
+photo = EventPhoto.get(pid)
+event = photo and photo.event
+d = Card.get(card_id)
+b = Blog.get(bid)
+if bid and not b:
+    n.delete()
+    return ''
+if pid and not photo:
+    n.delete()
+    return ''
+%>
+%if last_time and last_time.day != n.rtime.day:
+<li><h4>${str(last_time)[:10]}</h4></li>
+%endif
+<li>
+
+%if n.ntype == n.TYPE_ANSWER:
+<%
+qid = n.extra.get('question_id', 0)
+question = Question.get(qid)
+%>
+<i style="color:red" class="icon-key"></i>
+${n.author.name}回答了你的提问：${question.title}
+<a href="${b and b.path}">点此查看</a>
+%elif n.ntype == n.TYPE_QUESTION:
+<%
+qid = n.extra.get('question_id', 0)
+question = Question.get(qid)
+%>
+<i style="color:red" class="icon-question-sign"></i>
+%if question.is_anonymous:
+某厂工
+%else:
+${n.author.name}
+%endif
+问你：${question.title}
+<a href="${n.card.path}#answers">点此查看</a>
+
+%elif n.ntype == n.TYPE_AWARD_VOTED:
+<%
+aid = n.extra.get('badage_id', 0)
+award = Award.get(aid)
+%>
+<i style="color:red" class="icon-star"></i>${n.author.name} 在评选<a href="${award.badage.path}">${award.fullname}</a>大奖时，投了你一票哦~
+%if b:
+<a href="${b and b.path}">点此查看</a>
+%endif
+
+%elif n.ntype == n.TYPE_BLOG_LIKE:
+<i style="color:red" class="icon-heart"></i>
+<a href="${b and b.path}">${n.author.name}</a> 赞了你的${b.type_name}哦~ 你说他/她/它是不是对你感兴趣？(//▽//)
+%elif n.ntype == n.TYPE_BLOG_UNLIKE:
+<i style="color:red" class="icon-heart"></i>
+有人踩了你的${b.type_name}哦~ 你想想吧 = =|||
+%elif n.ntype == n.TYPE_LIKE:
+<i style="color:red" class="icon-heart"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>收藏了你的卡片哦~ 你说他/她/它是不是对你感兴趣？(//▽//)
+%elif n.ntype == n.TYPE_COMMENT:
+<i class="icon-comment-alt"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在你的卡片里留言了哦~ <a href="${n.card.path}#comment_${cid}">点此查看</a>。
+%elif n.ntype == n.TYPE_BLOG_REPLY:
+<i class="icon-comment-alt"></i>
+你回复的${b.type_name}有了新回复~ <a href="/blog/${bid}/#comment_${cid}">点此查看</a>。
+
+%elif n.ntype == n.TYPE_BLOG_COMMENT:
+<i class="icon-comment-alt"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>回复了你的${b.type_name}哦~ <a href="/blog/${bid}/#comment_${cid}">点此查看</a>。
+%elif n.ntype == n.TYPE_MENTION:
+<i class="icon-comment-alt"></i>
+%if card_id == n.card_id:
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在给你的卡片留言中提到了你~ <a href="${d.path}#comment_${cid}">点此查看</a>。
+%else:
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在给<href="${d.path}">${d.screen_name}</a>的卡片里留言中提到你了哦~ <a href="${d.path}#comment_${cid}">点此查看</a>。
+%endif
+%elif n.ntype == n.TYPE_BLOG_MENTION:
+<i class="icon-comment-alt"></i>
+<a href="${b.card and b.card.path}">${b.owner.name}</a>在${b.type_name}中提到你了哦~ <a href="${b.path}">点此查看</a>。
+%elif n.ntype == n.TYPE_BLOG_COMMENT_MENTION:
+<i class="icon-comment-alt"></i>
+<a href="${b.card and b.card.path}">${b.owner.name}</a>在${b.type_name}的回复里中提到你了哦~ <a href="${b.path}#comment_${cid}">
+
+%elif n.ntype == n.TYPE_PHOTO_LIKE:
+<i style="color:red" class="icon-heart"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>给你在<a href="${event.path}">${event.name}</a>上传的照片+ 1了~ <a href="${photo.path}">点此查看</a>。
+%elif n.ntype == n.TYPE_PHOTO_TAG:
+<i style="color:red" class="icon-circle-blank"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在<a href="${event.path}">${event.name}</a>上传的照片圈你了~ <a href="${photo.path}">点此查看</a>。
+%elif n.ntype == n.TYPE_PHOTO_COMMENT:
+<i class="icon-comment-alt"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>给你在<a href="${event.path}">${event.name}</a>上传的照片里留言了哦~ <a href="${photo.path}#comment_${cid}">点此查看</a>。
+
+%elif n.ntype == n.TYPE_PHOTO_COMMENT_MENTION:
+<i class="icon-comment-alt"></i>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在<a href="${event.path}">${event.name}</a>的照片里留言中提到你了哦~ <a href="${photo.path}#comment_${cid}">点此查看</a>。
+
+%elif n.ntype == n.TYPE_TAG:
+<%
+tags = n.extra.get('tags').encode('utf-8').split()
+%>
+<i class="icon-tags"></i>
+你的卡片有了新的标签：
+%for t in tags:
+<span class="card-tag label">${t}</span>
+%endfor
+，你猜谁给你打的？ ≖‿≖✧
+&nbsp;<a href="${card.path}">点此查看</a>
+%elif n.ntype == n.TYPE_REQUEST_PHOTO:
+<i class="icon-picture"></i>
+<a href="${n.author_card.path}">${n.author.name}</a> &nbsp;求你的真相照片哦~ 传一张吧，拜托了！m(_ _)m &nbsp;<a type="button" href="/make" class="btn btn-primary">上传真相</a>
+%elif n.ntype == n.TYPE_REQUEST_CHANGE_PHOTO:
+<i class="icon-picture"></i>
+<a href="${n.author_card.path}">${n.author.name}</a> &nbsp;和大家都觉的你真相照片不真！ 换一张吧，拜托了！m(_ _)m &nbsp;<a type="button" href="/make" class="btn btn-primary">上传真相</a>
+%elif n.ntype == n.TYPE_BADAGE:
+<%
+bd = Badage.get(n.author_id)
+%>
+%if bd:
+<i class="icon-trophy"></i>
+你得到了一枚<i class="${bd.icon} me-badage"></i><a href="/badage/${bd.name}" title="${bd.intro}">${bd.name}</a>徽章，恭喜你了！
+%endif
+
+%endif
+<br><span class="muted"> ${n.rtime}</span></a>
+</li>
+</%def>
+
+<%def name="pager_item(prefix, now, i, start, limit)">
+<% s = i*limit %>
+%if now == i:
+<li class="active"><a href="${prefix}start=${s}">${i+1}</a></li>
+%else:
+<li><a href="${prefix}start=${s}">${i+1}</a></li>
+%endif
+</%def>
+
+<%def name="pager(prefix, total, start, limit)">
+<div class="pagination pagination-centered">
+<% 
+n = total / limit
+if total % limit > 0:
+    n = n + 1
+now = start / limit
+%>
+<ul>
+%if now == 0:
+<li class="disabled"><a>&lt;</a></li>
+%else:
+<li><a href="${prefix}start=${(now-1)*limit}">&lt;</a></li>
+%endif
+
+%if n < 16:
+    %for i in xrange(0, n):
+    ${pager_item(prefix, now, i, start, limit)}
+    %endfor
+%else:
+    %for i in xrange(0, n):
+    %if i == 0 or i == n-1 or abs(now - i) < 6:
+    ${pager_item(prefix, now, i, start, limit)}
+    %elif abs(now - i) == 6:
+    <li><a>...</a></li>
+    %endif
+    %endfor
+%endif
+
+%if now + 1 < n:
+<li><a href="${prefix}start=${(now+1)*limit}">&gt;</a></li>
+%else:
+<li class="disabled"><a>&gt;</a></li>
+%endif
+</ul>
+</div>
+</%def>

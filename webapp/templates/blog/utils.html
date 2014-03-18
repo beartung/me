@@ -1,0 +1,397 @@
+<%!
+from config import DEVELOP_MODE, LOGO
+from webapp.models.consts import EMOTICONS
+from webapp.models.notify import Notify
+from webapp.models.card import Card
+from webapp.models.group import Group, Thread
+from webapp.models.blog import Blog, Rec
+from webapp.models.tag import Tag
+from webapp.models.badage import Badage, Award
+from webapp.models.event import EventPhoto, Event
+from webapp.models.question import Question, Answer
+%>
+<%def name="blog_ui(b, single=False)">
+<div id="blog-line-${b.id}">
+    %if b.btype == b.TYPE_NOTIFY:
+    ${notify_inline(b)}
+    %else:
+	${blog_ui_inline(b, single=single)}
+    %endif
+</div>
+</%def>
+
+<%def name="blog_comment(blog, comment)">
+<li id="comment_${comment.id}" class="media">
+<a class="pull-left media-object" href="${comment.author_card.path}">
+	<img class="avatar-small" src="${comment.author.picture(default=True)}">
+</a>
+<div class="media-body">
+	<h5>
+	<a href="${comment.author_card.path}">${comment.author.name}</a>
+	<small class="muted">
+		${comment.rtime}
+		%if req.user and req.user.id == comment.author_id:
+		<a class="muted pull-right card-tooltip" href="#" onclick="return uncomment_blog('${blog.id}','${comment.id}', '${single and 1 or 0}');" title="删除回复"><i class="icon-remove"></i></a>
+		%endif
+	</small>
+	</h5>
+	${comment.html|n}
+    %if comment.photo_id > 0:
+    <img class="pull-right" src="${comment.photo}">
+    %endif
+</div>
+</li>
+</%def>
+
+<%def name="blog_ui_inline(b, single=False)">
+<%
+if not b.card:
+    return ""
+%>
+%if single:
+<div class="row-fluid">
+<div class="span8">
+%endif
+	<div class="media">
+		<a class="media-object pull-left" href="${b.card.path}">
+			<img class="avatar" src="${b.owner.picture(default=True)}">
+		</a>
+		<div class="media-body media-wrapper">
+			<h5>
+				<a href="${b.card.path}">${b.card.screen_name}</a>
+				<small>
+                    <a href="${b.path}" class="muted">${b.ctime} <i class="${b.icon}"></i></a>
+                    %if b.action == b.BLOG_ICON:
+                    <sup style="color:red">新真相</sup>
+                    %elif b.action == b.BLOG_EVENT:
+                    <sup style="color:red">新事件</sup>
+                    %endif
+					%if req.user.id == b.user_id:
+                    <a class="pull-right muted card-tooltip" href="${b.path}remove" onclick="return confirm('真的要删除这条${b.type_name}吗？');" title="删除${b.type_name}"><i class="icon-remove"></i></a>
+					%endif
+				</small>
+			</h5>
+            %if b.n_unlike < 2:
+            <div id="blog-content-${b.id}">
+            %else:
+            <div id="blog-content-${b.id}" class="hide">
+            %endif
+            <%
+            qid = b.extra.get("question_id", "")
+            question = None
+            if qid:
+                question = Question.get(qid)
+            %>
+            %if question:
+            <h5>
+                <i class="icon-question-sign"></i>
+                <em>${question.title}</em>
+                <span class="pull-right">
+                    %if question.is_anonymous:
+                    <i class="icon-user"></i>
+                    %else:
+                    <a href="${question.author_card and question.author_card.path}">${question.author.name}</a>
+                    %endif
+                </span>
+            </h5>
+            %endif
+            %if b.action == b.BLOG_EVENT and b.event:
+            <p>
+            事件：<a href="${b.event.path}">${b.event.name}</a>
+            </p>
+            %endif
+			%if b.content:
+            <p>
+            %if question:
+            <i class="icon-key"></i>
+            %endif
+            ${b.html|n}
+            </p>
+			%endif
+			%if b.photo_id > 0:
+                %if question:
+                <i class="icon-key"></i>
+                %endif
+				<p>
+					%if single:
+					<img src="${b.photo}">
+					%else:
+					<a href="#dialog-blog-photo-${b.id}" role="button" data-toggle="modal">
+						<img src="${b.dynamic_photo(300, 300)}" class="media-img">
+					</a>
+					%endif
+				</p>
+			%endif
+			
+			%if b.audio_id > 0:
+                %if question:
+                <i class="icon-key"></i>
+                %endif
+				<p>
+					<audio controls="controls">
+                    %if single:
+					<source src="${b.audio}" type="audio/${b.audio_ftype(b.audio_id)}" preload="true" autoplay="true"/>
+                    %else:
+					<source src="${b.audio}" type="audio/${b.audio_ftype(b.audio_id)}" preload="false"/>
+                    %endif
+					</audio>
+				</p>
+			%endif
+            </div>
+            %if b.n_unlike > 1:
+            <p id="btn-hided-${b.id}" class="muted">
+            <a class="btn btn-link" title="点击查看内容" onclick="return show_blog_content('${b.id}');">被太多人踩了，内容被隐藏</a>
+            </p>
+            %endif
+			<p class="muted">
+				<div class="pull-right">
+				%if b.photo_id > 0:
+				<a href="${b.origin_photo}" target="_blank" class="muted"><i class="icon-download-alt"></i>下载原图</a>
+				<div id="dialog-blog-photo-${b.id}" 
+					class="modal hide text-center"
+					style="background:none;box-shadow:none;border-radius:0;border:none"
+					tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+##					<div class="modal-body" style="min-width:600px;min-height:${b.photo_size[1]}px;">
+##						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+						<img src="${b.photo}" style="max-height:80%;">
+##					</div>
+				</div>
+##				<a href="#dialog-blog-photo-${b.id}" role="button" data-toggle="modal"><i class="icon-fullscreen"></i></a>
+				%elif b.audio_id > 0:
+				<a href="${b.origin_audio}" target="_blank"><i class="icon-download-alt"></i> 下载音频</a>
+				%endif
+				</div>
+				%if b.is_liked(req.user.id):
+					<span class="muted"><i class="icon-thumbs-up"></i> 已赞</span>
+					%else:
+					<a id="btn_${b.id}_like" type="button" href="#" onclick="return like_blog('${b.id}', '${single and 1 or 0}');"><i class="icon-thumbs-up"></i> 赞</a>
+				%endif
+
+				%if b.is_unliked(req.user.id):
+					&nbsp;<span class="muted"><i class="icon-thumbs-down"></i></span>
+					%else:
+					&nbsp;<a id="btn_${b.id}_unlike" href="#" type="button" onclick="return unlike_blog('${b.id}', '${single and 1 or 0}');"> <i class="icon-thumbs-down"></i> </a>
+				%endif
+                %if b.n_unlike:
+                <span class="text-error">${b.n_unlike}</span>
+                %endif
+
+
+##				<i class="activity-icon icon-thumbs-up"></i>${b.n_like} 
+##				<i class="icon-comment-alt"></i>${b.n_comment}
+			</p>
+			<div class="blog-comments">
+				%if not single and b.n_like > 0:
+					<p class="muted">
+					${b.n_like}人赞：
+					%for u in b.likers:
+						<a href="/card/${u.uid}/" title="${u.name}" class="muted">${u.name} </a>
+					%endfor
+					</p>
+				%endif
+				%if b.n_comment > 0:
+				<div id="blog-comments-${b.id}">
+					<ul class="unstyled">
+					%for cm in b.comments:
+					${blog_comment(b, cm)}
+					%endfor
+					</ul>
+				</div>
+				%endif
+				<div class="blog-comment-action">
+                    <form id="comment_form_${b.id}" method="post">
+                    <textarea id="input_${b.id}_comment" class="me-comm-textarea blog-comment-input" name="content" value="" placeholder="添加评论..." type="text" ></textarea>
+                    <p id="emoticon-${b.id}" class="hide">
+                    %for e in EMOTICONS:
+                    <a class="btn" onclick="add_emoticon('#input_${b.id}_comment', '${e}')">${e}</a>
+                    %endfor
+                    </p>
+                    <a class="btn blog-comment-btn blog-comment-cancel pull-right" ><i class="icon-remove"></i></a>
+                    <a id="btn_${b.id}_comment" type="button" class="btn blog-comment-btn" onclick="return comment_blog('${b.id}');">回复</a>
+                    <a class="btn btn-link blog-comment-btn blog-comment-emoticon" onclick="$('#emoticon-${b.id}').show()"><i class="icon-github-alt"></i></a>
+                    <input id="btn_${b.id}_file" class="blog-comment-btn" type="file" name="update_file"/>
+                    <input type="hidden" name="single" value="${single and 1 or 0}"/>
+                    <input type="hidden" name="bid" value="${b.id}"/>
+                    </form>
+				</div>
+			</div>
+		</div>
+##		%if not single:
+##		<hr>
+##		%endif
+	</div>
+%if single:
+</div>
+<div class="span4">
+	%if b.n_like > 0:
+		<section>
+			<h3>${b.n_like}人赞</h3>
+			<div class="avatar-list">
+				%for u in b.likers:
+				<a href="/card/${u.uid}/" title="${u.name}">
+					<img class="avatar" src="${u.picture(default=True)}">
+				</a>
+				%endfor
+			</div>
+		</section>
+	%endif
+</div>
+</div>
+%endif
+</%def>
+
+<%def name="notify_inline(n)">
+<div class="media">
+<%
+use_logo = False
+if n.action == Notify.TYPE_TAG:
+    use_logo = True
+if n.action == Notify.TYPE_QUESTION:
+    qid = n.extra.get('question_id', 0)
+    question = Question.get(qid)
+    use_logo = question and question.is_anonymous
+%>
+%if use_logo or not n.author:
+<a class="pull-left" href="/about">
+	<img class="media-object" src="${LOGO}">
+</a>
+%else:
+<a class="pull-left" href="${n.author_card and n.author_card.path}">
+	<img class="media-object avatar" src="${n.author.picture(default=True)}">
+</a>
+%endif
+
+<div class="media-body media-wrapper">
+<h5>
+%if n.action == Notify.TYPE_NEW_THREAD:
+<%
+tid = n.extra.get("thread_id", "")
+t = Thread.get(tid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>新发了<a href="${t and t.path}">${t and t.title}</a>帖子 
+%elif n.action == Notify.TYPE_REC:
+<%
+r = Rec.get(n.id)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>推荐了<a href="${r.obj.path}">${r.name}</a>${r.type_name}
+%elif n.action == Notify.TYPE_CREATE_GROUP:
+<%
+gid = n.extra.get('group_id', 0)
+g = Group.get(gid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>创建了<a href="${g.path}">${g.name}</a>群组
+%elif n.action == Notify.TYPE_TAG_ADD_GROUP:
+<%
+gid = n.extra.get('group_id', 0)
+t = n.extra.get('tag', '')
+tag = Tag.get_by_name(t)
+g = Group.get(gid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>把 <a href="${tag.path}" class="label">${tag.name}</a> 的厂工拉进了<a href="${g.path}">${g.name}</a>群组
+
+%elif n.action == Notify.TYPE_ADD_GROUP:
+<%
+gid = n.extra.get('group_id', 0)
+g = Group.get(gid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>把<a href="${n.card.path}">${n.card.screen_name}</a>拉进了<a href="${g.path}">${g.name}</a>群组
+%elif n.action == Notify.TYPE_JOIN_GROUP:
+<%
+gid = n.extra.get('group_id', 0)
+g = Group.get(gid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>加入了<a href="${g.path}">${g.name}</a>群组
+%elif n.action == Notify.TYPE_QUESTION:
+%if question.is_anonymous:
+某厂工向<a href="${n.card.path}">${n.card.screen_name}</a>提问：${question.title}
+%else:
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>向<a href="${n.card.path}">${n.card.screen_name}</a>提问：${question.title}
+%endif
+%elif n.action == Notify.TYPE_AWARD_VOTED:
+<%
+aid = n.extra.get('badage_id', 0)
+award = Award.get(aid)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在[<a href="${award.badage.path}">${award.name}</a>]
+投票给<a href="${n.card.path}">${n.card.screen_name}</a>
+%elif n.action == Notify.TYPE_PHOTO_LIKE:
+<%
+pid = n.extra.get('photo_id', 0)
+photo = EventPhoto.get(pid)
+event = photo and photo.event
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>给<a href="${photo and photo.path}">[${event and event.name}]的照片</a> + 1了！
+%elif n.action == Notify.TYPE_PHOTO_TAG:
+<%
+pid = n.extra.get('photo_id', 0)
+photo = EventPhoto.get(pid)
+event = photo and photo.event
+did = n.extra.get('card_id', 0)
+card = Card.get(did)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在<a href="${photo and photo.path}">[${event and event.name}]的照片</a>里圈出了<a href="${card.path}">${card.screen_name}</a>！
+%elif n.action == Notify.TYPE_LIKE:
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>收藏了<a href="${n.card.path}">${n.card.screen_name}</a>的卡片
+%elif n.action == Notify.TYPE_COMMENT:
+<%
+cid = n.extra.get('comment_id', 0)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>给<a href="${n.card.path}">${n.card.screen_name}</a>的卡片里留言了
+%elif n.action == Notify.TYPE_MENTION:
+<%
+cid = n.extra.get('comment_id', 0)
+card_id = n.extra.get('card_id', 0)
+d = Card.get(card_id)
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在给<a href="${d.path}">${d.screen_name}</a>的卡片里留言中提到<a href="${n.card.path}">${n.card.screen_name}</a>
+%elif n.action == Notify.TYPE_PHOTO_COMMENT:
+<%
+cid = n.extra.get('comment_id', 0)
+pid = n.extra.get('photo_id', 0)
+photo = EventPhoto.get(pid)
+event = photo.event
+%>
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>给<a href="${n.card.path}">${n.card.screen_name}</a>在<a href="${event.path}">${event.name}</a>上传的<a href="${photo.path}">照片</a>里留言了
+%elif n.action == Notify.TYPE_TAG:
+<%
+tags = n.extra.get('tags').encode('utf-8').split()
+%>
+<a href="${n.card.path}">${n.card.screen_name}</a>的卡片有了新的标签：
+%for t in tags:
+<span class="card-tag label">${t}</span>
+%endfor
+%elif n.action == Notify.TYPE_REQUEST_PHOTO:
+<a href="${n.author_card and n.author_card.path}">${n.author.name}</a>在求<a href="${n.card.path}">${n.card.screen_name}</a>的真相照片
+%elif n.action == Notify.TYPE_REQUEST_CHANGE_PHOTO:
+<a href="${n.author_card.path}">${n.author.name}</a>和大家都觉得<a href="${n.card.path}">${n.card.screen_name}</a>的真相照片简直是#^&*！赶紧换吧！
+%elif n.action == Notify.TYPE_BADAGE:
+<%
+aid = n.extra.get('author_id', 0)
+bd = Badage.get(aid)
+%>
+<a href="${n.card.path}">${n.card.screen_name}</a>得到了一枚<i class="${bd.icon} me-badage"></i><a href="/badage/${bd.name}" title="${bd.intro}">${bd.name}</a>徽章
+%endif
+</h5>
+<p class="pull-left muted"><i class="activity-icon ${n.icon}"></i> ${n.ctime}</p>
+</div>
+</%def>
+
+<%def name="photo_blog_thumb(b)">
+<div class="card-thumb"> 
+    <div class="card-img-wrapper">
+        <a href="${b.path}">
+            <img src="${b.dynamic_photo(480, 480)}">
+        </a>
+    </div>
+    <div class="card-info-wrapper">
+        <span class="card-small-score pull-right">
+        <i class="icon-heart-empty"></i> ${b.n_like}
+        <i class="icon-comment-alt"></i> ${b.n_comment}
+        </span>
+        <a href="${b.card.path}">
+            <nobr><img class="avatar-small" src="${b.owner.picture() or 'http://img3.douban.com/icon/user_large.jpg'}">
+            ${b.owner.name}</nobr>
+        </a>
+    </div>
+</div>
+</%def>

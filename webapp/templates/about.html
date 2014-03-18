@@ -1,0 +1,41 @@
+<%inherit file="/base.html" />
+<%def name="title()">About</%def>
+<h1>豆瓣花名册</h1>
+<br>
+<img src="/static/img/6.jpg" usemap="#Map" width="500" height="332"  />
+<map name="Map" id="Map">
+    <area shape="poly" coords="30,0,110,0,110,332,30,332" href="/card/brant/" target="html" />
+    <area shape="poly" coords="111,0,189,0,189,332,111,332" href="/card/oneday/" target="html" />
+    <area shape="poly" coords="190,0,260,0,260,332,190,332" href="/card/ahbei/" target="html" />
+    <area shape="poly" coords="261,0,330,0,330,332,261,332" href="/card/hongqn/" target="html" />
+    <area shape="poly" coords="331,0,400,0,400,332,331,332" href="/card/skwang/" target="html" />
+    <area shape="poly" coords="401,0,480,0,480,332,401,332" href="/card/xyb/" target="html" />
+</map>
+<p style="padding-top:10px"><a href="http://code.dapps.douban.com/me">http://code.dapps.douban.com/me</a></p>
+<br>
+<div class="pull-right">
+    <a class="btn" type="button" href="/card/bear/"><i class="icon-credit-card"></i> bear@douban</a>
+</div>
+<hr>
+%if req.user is None:
+<br>
+<a class="btn btn-large btn-primary" href="${req.signin_url}">用豆瓣账户登陆</a>
+%endif
+<div class="text-left">
+	<h2>豆瓣花名册是什么？</h2>
+	<p>豆瓣现在已经400+人了，所以很多时候，豆瓣id，姓名和真人对不上，本项目就是为了解决这个问题的。</p>
+	<h2>隐私机制是怎样的？</h2>
+	<p>基本信息比如豆瓣id，豆瓣邮箱，skype是公开的，匿名用户可见，可搜索。因为只部署在内网的DAE上，所以没有泄漏到外部的风险。</p>
+	<p>真相信息比如姓名，手机号等是半公开的，登录用户并且也是填写过真相信息的同学才可见，不可搜索。</p>
+	<h2>将来会有什么新功能？</h2>
+	<p>提供Api和App，豆油通知，问答系统？广播系统？</p>
+	<h2>使用了那些开源项目？</h2>
+	<ul>
+	    <li><a href="http://dahlia.kr/wand/" target="_blank">http://dahlia.kr/wand/</a></li>
+	        <li><a href="http://twitter.github.com/bootstrap/" target="_blank">http://twitter.github.com/bootstrap/</a></li>
+	        <li><a href="http://fortawesome.github.com/Font-Awesome/" target="_blank">http://fortawesome.github.com/Font-Awesome/</a></li>
+	        <li><a href="https://github.com/eternicode/bootstrap-datepicker" target="_blank">https://github.com/eternicode/bootstrap-datepicker</a></li>
+	        <li><a href="http://timeline.verite.co/" target="_blank">http://timeline.verite.co/</a></li>
+	</ul>
+</div>
+<img src="http://readthedocs.dapps.douban.com/doc/daeguide/_images/pb2.png"><img src="http://code.dapps.douban.com/static/img/code-logo.png" style="width:24px;height:24px; padding-left:5px; margin-bottom:5px">

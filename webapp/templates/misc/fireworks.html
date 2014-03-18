@@ -1,0 +1,487 @@
+<%!
+from config import SITE, JUG_HOST
+%>
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <title>Fireworks · Me</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=1" />
+        <link href="/static/css/bootstrap-2.3.1.min.css" type="text/css" rel="stylesheet">
+        <link href="/static/css/bootstrap-responsive-2.3.1.min.css" type="text/css" rel="stylesheet">
+<style type="text/css">
+    html,
+    body{
+        background: url(http://p.dapps.douban.com/i/24359bb6e2e211e2ad3a24b6fdf6fbfc.jpg) no-repeat 0 0;
+        background-size: cover;
+        height:100%;
+    }
+    .fw-card{
+        background:rgba(255, 255, 255, 0.8); 
+        width: 540px;
+    }
+    .fw-head{
+        width: 540px;
+    }
+    .fw-title{
+        position:relative;
+        top:-24px;
+        left:10px;
+    }
+    .fw-title a{
+        font-size:24px;
+        font-style:italic;
+        position:relative;
+        top:20px;
+        padding:8px;
+    }
+    .fw-time{
+        font-size:14px;
+        position:relative;
+        top:20px;
+        color:#777;
+    }
+    .fw-icon{
+        width:48px;
+        width:48px;
+        padding:2px;
+        background: #FFF;
+    }
+    .fw-text{
+        font-size:22px;
+        padding:0 10px 10px 10px;
+        line-height: 1.6;
+    }
+    .fw-image{
+        width: 520px;
+        margin: 10px;
+        overflow: hidden;
+    }
+</style>
+<script type="text/javascript">
+function trace(msg) {
+    if (window.console) {
+        console.log(msg);
+    } else if (typeof(jsTrace) != 'undefined' ) {
+        jsTrace.send(msg);
+    } else {
+        alert(msg);
+    }
+}
+
+function get_blog_fireworks(bid){
+    $.get('${SITE}/blog/' + bid + '/', {output:'json', fireworks:'1'}, function(r){
+        light_fireworks(r);
+    });
+}
+</script>
+
+</head>
+    <body>
+        <div id="container">
+        </div>
+    </body>
+    <script src="/static/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script src="/static/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/static/js/juggernaut/application.js" type="text/javascript"></script>
+    <script src="/static/js/3d/three.min.js" type="text/javascript"></script>
+    <script src="/static/js/3d/tween.min.js" type="text/javascript"></script>
+    <script src="/static/js/3d/CSS3DRenderer.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+    function init() {
+
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+        camera.position.y = - 25;
+
+        scene = new THREE.Scene();
+
+        renderer = new THREE.CSS3DRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.domElement.style.position = 'absolute';
+        renderer.domElement.style.top = 0;
+        document.getElementById( 'container' ).appendChild( renderer.domElement );
+
+        if (!debug){
+            get_history();
+        }
+
+        document.body.addEventListener( 'mousewheel', onMouseWheel, false );
+
+        document.body.addEventListener( 'click', function ( event ) {
+
+            auto = true;
+            new TWEEN.Tween( camera.position )
+                    .to( { x: 0, y: - 25 }, 1500 )
+                    .easing( TWEEN.Easing.Exponential.Out )
+                    .start();
+
+        }, false );
+
+        window.addEventListener( 'resize', onWindowResize, false )
+    }
+
+    function kill_fireworks(index){
+        var object = objects[ index ];
+
+        //trace("kill index = " + index + " b len=" + objects.length);
+        new TWEEN.Tween( object.position )
+            .to( { y: - 3000 }, 1000 )
+            .easing( TWEEN.Easing.Exponential.In )
+            .start();
+
+        new TWEEN.Tween( object )
+            .to( {}, 2000 )
+            .onComplete( function () {
+                try{
+                    scene.remove( this );
+                    renderer.cameraElement.removeChild( this.element );
+                }catch(ex){
+                    trace(ex.name + " " + ex.message); 
+                }finally{
+                    objects.shift();
+                    //trace("kill index = " + index + " a len=" + objects.length);
+                }
+
+            } )
+        .start();
+    }
+
+    function light_fireworks(entry){
+        make_fireworks(entry, Math.random()*300 - 100, 0, -800);
+        move_to(objects.length - 1);
+    }
+
+
+    function make_fireworks(entry, x, y, z){
+        var TMPL = '<div id="card-#ID#" class="fw-card"><img id="head-#HEAD_ID#" class="fw-head" src="#HEAD_SRC#"><div class="fw-title"><img class="fw-icon" src="#ICON_SRC#"><a href="#LINK#">#NAME#</a><span class="fw-time">#TIME#</span></div><p class="fw-text">#TEXT#</p><img class="fw-image" src="#IMAGE_SRC#"></div>';
+        var head = "http://me.intra.douban.com/p/_u_" + entry.author_id + "--r_cc_540x300.jpg";
+        var link = "http://me.intra.douban.com/card/" + entry.author_id + "/";
+        var html = TMPL.replace('#ID#', entry.id).replace('#HEAD_SRC#', head)
+                        .replace('#HEAD_ID#', 'icon-' + entry.author_id).replace("#ICON_SRC#", entry.author_icon)
+                        .replace("#LINK#", link).replace("#NAME#", entry.author_name)
+                        .replace("#TIME#", entry.created)
+                        .replace("#TEXT#", entry.text).replace("#IMAGE_SRC", entry.image);
+        if (!entry.image) html = html.replace("fw-image", "fw-image hide");
+        if (!entry.text) html = html.replace("fw-text", "fw-text hide");
+        var element = $(html).appendTo($('#container'))[0];
+        var image = $('#head-icon-' + entry.author_id)[0];
+        //trace(image);
+        var object = new THREE.CSS3DObject( element );
+        object.position.x = x;
+        object.position.y = y;
+        object.position.z = z;
+        scene.add( object );
+
+        objects.push( object );
+
+        var properties = { data: entry, object: object }
+
+        element.properties = properties;
+        if (image) image.properties = properties;
+
+        image.addEventListener( 'load', function ( event ) {
+
+            var object = this.properties.object;
+
+            new TWEEN.Tween( object.position )
+            .to( { y: object.position.y + 100 }, 2000 )
+            .easing( TWEEN.Easing.Exponential.Out )
+            .start();
+
+            new TWEEN.Tween( camera.position )
+            .to( { x: object.position.x - 25, y: object.position.y - 25 }, 1500 )
+            .easing( TWEEN.Easing.Exponential.Out )
+            .onComplete( function () {
+                auto = true;
+                })
+            .start();
+
+        }, false );
+
+        element.addEventListener( 'click', function ( event ) {
+
+            event.stopPropagation();
+
+            var data = this.properties.data;
+            var object = this.properties.object;
+
+            auto = false;
+
+            var prev = object.position.z + 400;
+
+            new TWEEN.Tween( camera.position )
+                .to( { x: object.position.x, y: object.position.y - 25 }, 1500 )
+                .easing( TWEEN.Easing.Exponential.Out )
+                .start();
+
+            new TWEEN.Tween( { value: prev } )
+                .to( { value: -300  }, 2000 )
+                .onUpdate( function () {
+
+                    move( this.value - prev );
+                    prev = this.value;
+
+                } )
+                .easing( TWEEN.Easing.Exponential.Out )
+                .start();
+
+        }, false );
+
+
+    }
+
+    function make_fireworks_bak(entry, x, y, z){
+        var element = document.createElement( 'div' );
+        element.style.width = '640px';
+        element.style.height = '480px';
+        element.style.background = 'rgba(199, 219, 217, 0.5)';
+
+        var name = document.createElement( 'h2' );
+        var icon = document.createElement( 'img' );
+        icon.style.width = '48px';
+        icon.style.height = '48px';
+        icon.style.padding = '8px';
+        icon.src = entry.author_icon;
+        name.appendChild( icon );
+
+        name.appendChild(document.createTextNode(entry.author_name));
+        element.appendChild(name);
+
+        if (entry.text){
+            var txt = document.createElement( 'h3' );
+            txt.appendChild(document.createTextNode(entry.text));
+            txt.style.padding = '8px';
+            element.appendChild(txt);
+        }
+        var hr = document.createElement( 'hr' );
+        hr.style.margin = "20px 0";
+        hr.style.border = "1px solid #ccc";
+        element.appendChild(hr);
+        //image.src = "http://me.intra.douban.com/p/" + entry.author_id + "--l.jpg";
+
+        if (entry.image){
+            var image = document.createElement( 'img' );
+            image.addEventListener( 'load', function ( event ) {
+
+                var object = this.properties.object;
+
+                new TWEEN.Tween( object.position )
+                    .to( { y: object.position.y + 100 }, 2000 )
+                    .easing( TWEEN.Easing.Exponential.Out )
+                    .start();
+
+                new TWEEN.Tween( camera.position )
+                    .to( { x: object.position.x - 25, y: object.position.y - 25 }, 1500 )
+                    .easing( TWEEN.Easing.Exponential.Out )
+                    .onComplete( function () {
+                        auto = true;
+                    })
+                    .start();
+
+            }, false );
+            image.style.position = 'absolute';
+            image.style.width = '640px';
+            image.style.height = '480px';
+            image.src = entry.image;
+            element.appendChild( image );
+        }
+
+        var object = new THREE.CSS3DObject( element );
+        object.position.x = x;
+        object.position.y = y;
+        object.position.z = z;
+        scene.add( object );
+
+        objects.push( object );
+
+        var properties = { data: entry, object: object }
+
+        element.properties = properties;
+        if (image) image.properties = properties;
+
+        element.addEventListener( 'click', function ( event ) {
+
+            event.stopPropagation();
+
+            var data = this.properties.data;
+            var object = this.properties.object;
+
+            auto = false;
+
+            var prev = object.position.z + 400;
+
+            new TWEEN.Tween( camera.position )
+                .to( { x: object.position.x, y: object.position.y - 25 }, 1500 )
+                .easing( TWEEN.Easing.Exponential.Out )
+                .start();
+
+            new TWEEN.Tween( { value: prev } )
+                .to( { value: 0  }, 2000 )
+                .onUpdate( function () {
+
+                    move( this.value - prev );
+                    prev = this.value;
+
+                } )
+                .easing( TWEEN.Easing.Exponential.Out )
+                .start();
+
+        }, false );
+
+    }
+
+    function move_random(){
+        if (objects.length > 0){
+            move_to(Math.floor(Math.random()*500)%objects.length);
+        }
+    }
+
+    function move_to(index){
+        var object = objects[ index ];
+
+        var prev = object.position.z + 400;
+
+        new TWEEN.Tween( camera.position )
+            .to( { x: object.position.x, y: object.position.y - 25 }, 1500 )
+            .easing( TWEEN.Easing.Exponential.Out )
+            .start();
+
+        new TWEEN.Tween( { value: prev } )
+            .to( { value: -300  }, 2000 )
+            .onUpdate( function () {
+
+                    move( this.value - prev );
+                    prev = this.value;
+
+                    } )
+        .easing( TWEEN.Easing.Exponential.Out )
+        .onComplete( function () {
+        })
+        .start();
+    }
+
+    function get_history(){
+        $.get('${SITE}/update', {output:'json', fireworks:'1', count:'20'}, function(r){
+            //trace(r);
+            if (r.blogs){
+                for ( var i = 0; i < r.blogs.length; i ++ ) {
+                    var entry = r.blogs[i];
+                    var x = Math.random() * 5000 - 2500;
+                    var y = Math.random() * 4000 - 2000;
+                    var z = Math.random()*-1000 - i*3000;
+                    make_fireworks(entry, x, y, z);
+                }
+            }
+            if (!debug){
+                timer = setInterval("move_random()", 6500);
+            }
+        });
+    }
+
+    function relayout( delta ) {
+
+        for ( var i = 0; i < objects.length; i ++ ) {
+
+            var object = objects[ i ];
+
+            object.position.x = Math.random() * 4000 - 2000;
+            object.position.y = Math.random() * 2000 - 1000;
+            object.position.z += delta;
+            if ( object.position.z > 0 ) {
+
+                object.position.z -= 5000;
+
+            } else if ( object.position.z < - 5000 ) {
+
+                object.position.z += 5000;
+
+            }
+            if (object.position.z > -300){
+                object.position.z -= 2000;
+            }
+        }
+
+    }
+
+    function move( delta ) {
+        for ( var i = 0; i < objects.length; i ++ ) {
+
+            var object = objects[ i ];
+
+            object.position.z += delta;
+
+            if ( object.position.z > 0 ) {
+
+                object.position.z -= 5000;
+
+            } else if ( object.position.z < - 5000 ) {
+
+                object.position.z += 5000;
+
+            }
+
+        }
+
+    }
+
+    function onMouseWheel( event ) {
+
+        move( event.wheelDelta );
+
+    }
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+    }
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+
+        TWEEN.update();
+
+        if ( auto === true && !debug) {
+            move( 1 );
+        }
+
+        renderer.render( scene, camera );
+
+    }
+    var camera, scene, renderer, timer;
+    var objects = [];
+    var auto = true;
+    var debug = false;
+    //var debug = true;
+
+    init();
+    animate();
+
+    var jug = new Juggernaut({'host':'${JUG_HOST}', 'port':4015});
+    jug.on("connect", function(){
+        trace('jug connected');
+    });
+    jug.on("disconnect", function(){
+        trace('jug disconnected!!');
+    });
+    jug.subscribe('me-fireworks', function(data) {
+        if (!debug){
+            relayout(-2000);
+            clearInterval(timer)
+            light_fireworks(data);
+            kill_fireworks(0);
+            timer = setInterval("move_random()", 6500);
+        }
+    });
+
+    if (debug){
+        get_blog_fireworks('400');
+    }
+
+    </script>
+</html>

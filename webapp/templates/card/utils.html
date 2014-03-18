@@ -1,0 +1,310 @@
+<%!
+from config import DEVELOP_MODE, SITE, LOGO
+from libs import istatic
+from webapp.models.consts import TAGS, ASTROS, ZODIACS, MARRIAGES, SEXS, LOVES
+from webapp.models.card import Badage, Card
+from webapp.models.event import EventPhoto
+from webapp.models.utils import escape_path, unescape_path
+%>
+
+<%def name="card_private_info(card)">
+<%
+profile = card.profile
+at = ASTROS[profile.astro][1]
+zo = ZODIACS[profile.zodiac][1]
+ma = MARRIAGES[profile.marriage][1]
+se = SEXS[profile.sex][1]
+lo = LOVES[profile.love][1]
+%>
+%if profile.astro and profile.zodiac:
+%if card.can_view(req.user, 'astro') and card.can_view(req.user, 'zodiac'):
+<a href="${SITE}/astro/${at}">${at}</a> <a href="${SITE}/zodiac/${zo}">${zo}</a>
+%else:
+<del class="muted card-tooltip" title="填写了自己的才能看到别人的哦~">星座 属相</del>
+%endif
+%endif
+%if profile.marriage:
+%if card.can_view(req.user, 'marriage'):
+${ma}
+%else:
+<del class="muted card-tooltip" title="填写了自己的才能看到别人的哦~">感情状态</del>
+%endif
+%endif
+%if profile.sex and profile.love:
+%if card.can_view(req.user, 'sex') and card.can_view(req.user, 'love'):
+${se}<i class="icon-heart-empty"></i>${lo}
+%else:
+<del class="muted card-tooltip" title="填写了自己的才能看到别人的哦~">性别</del><i class="icon-heart-empty"></i><del class="muted card-tooltip" title="填写了自己的才能看到别人的哦~">取向</del>
+%endif
+%endif
+</%def>
+
+<%def name="card_vote_dialog(award, card, cate='')">
+%if award:
+<div id="vote_dialog_${card.id}" class="modal hide fade">
+    <form method="post" action="${card.path}vote">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>在${award.fullname}的评选里投票给${card.screen_name}</h3>
+        </div>
+        <div class="modal-body">
+            <textarea id="vote_content_${card.id}" rows="2" name="msg"
+                placeholder="">${req.user.name}在#${award.name}#的评选里投给${card.screen_name}神圣一票！ </textarea>
+        </div>
+        <div class="modal-footer">
+            <input type="button" class="btn btn-primary" value="提交" onclick="return vote_card('${card.id}', '${award.badage_id}')">
+        </div>
+    </form>
+</div>
+%endif
+</%def>
+
+
+<%def name="card_tag_dialog(card, cate='')">
+<div id="tag_dialog_${card.id}" class="modal hide fade">
+    <form method="post" action="${card.path}tag">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>给 ${card.screen_name} 打标签</h3>
+        </div>
+        <div class="modal-body">
+            <div>
+                %for t in TAGS:
+                <a class="label label-info" onclick="return add_tag('#tags_content_${card.id}', '${t}');" href="#">${t}</a>
+                %endfor
+            </div>
+            <hr>
+            <textarea id="tags_content_${card.id}" rows="2" name="tags"
+                placeholder="给他打上贴切的标签吧：）">${' '.join(card.user_tags(req.user.id))}</textarea>
+        </div>
+        <div class="modal-footer">
+            <input type="button" class="btn btn-primary" value="提交" onclick="return add_tags('${card.id}', '${cate}')">
+        </div>
+    </form>
+</div>
+</%def>
+
+<%def name="small_card_tags(card, fulllink=False)">
+<%
+profile = card.profile
+%>
+<ul class="unstyled">
+    <li>${card_private_info(card)}</li>
+    <li>
+	    %if card.tags:
+	    %for t in card.tags:
+	    <a href="${SITE}/tag/${escape_path(t)}"><span class="label">${t}</span></a>
+	    %endfor
+	    %else:
+	    <a href="${card.url}" class="muted">还没有自我描述</a>
+	    %endif
+    </li>
+    <li>
+	    %if card.ptags:
+	    %for t in card.ptags:
+	    <a href="${SITE}${t.path}"><span class="label label-inverse">${t.name}</span></a>
+	    %endfor
+	    %else:
+	    <a type="button" role="button" data-toggle="modal" class="muted" href="#tag_dialog_${card.id}">还没有人打标签</a>
+	    %endif
+    </li>
+##    <li>
+##    <i class="icon-comments-alt"></i> ${card.comment_num}
+##    </li>
+</ul>
+</%def>
+
+<%def name="card_small(card)">
+<%
+if not card:
+    return ''
+u = card.owner
+p = {}
+if not DEVELOP_MODE:
+    p = u.profile() or {}
+city = p.get('city', '城市')
+profile = card.profile
+%>
+<div class="columns-item">
+<div class="card-small">
+    <div class="card-img-wrapper">
+        <a href="${card.path}">
+            <img src="${card.photo or 'http://img3.douban.com/icon/user_large.jpg'}">
+            <i class="card-small-img-shadow"></i>
+            <h3 class="card-score">${card.score}</h3>
+        </a>
+        %if req.user:
+        <div class="card-small-img-btn">
+        %if card.photo:
+        <a class="btn btn-small pull-right btn-info" onclick="return request_card_change_photo('${card.id}');">求换真相</a>
+        %else:
+        <a class="btn btn-small pull-right btn-warning" onclick="return request_card_photo('${card.id}');">求真相</a>
+        %endif
+        <a type="button" role="button" data-toggle="modal" class="btn btn-small pull-left" href="#tag_dialog_${card.id}"><i class="icon-tag"></i> 打标签</a>
+        %if card.is_liked(req.user.id):
+        <a type="button" class="btn btn-small disabled pull-left"><i style="color:#D14836" class="icon-heart"></i></a>
+        %else:
+        <a id="btn_${card.id}_like" type="button" class="btn btn-small pull-left btn-danger" onclick="return like_card('${card.id}');"><i class="icon-heart-empty"></i> 收藏</a>
+        %endif
+	    </div>
+        %endif
+    </div>
+    <div class="card-info-wrapper">
+        <h4>
+       	    %if card.badages:
+		    <div class="pull-right">
+			    %for b in card.badages:
+			    <a href="${SITE}/badage/${b.name}" class="me-badage-link card-tooltip" title="${b.name}(${b.intro})"><i class="${b.icon} me-badage"></i></a>
+			    %endfor
+		    </div>
+		    %endif
+            <a href="${u.url()}" target="_blank"><img class="avatar-small" src="${u.picture(default=True)}"> ${card.screen_name}</a>
+        </h4>
+        <div id="tags_small_div_${card.id}" class="card-info">
+            ${small_card_tags(card)}
+        </div>
+        ${card_tag_dialog(card, 'small')}
+##        %if card.like_num > 0:
+##	        <span id="num_${card.id}_like" class="btn disabled card-small-like-num">
+##        %else:
+##	        <span id="num_${card.id}_like" class="btn disabled card-small-like-num hide">
+##	    %endif
+			</span>
+    </div>
+    ${card_small_status(card)}
+</div>
+</div>
+</%def>
+
+<%def name="card_chart(card)">
+<% 
+u = card.owner
+profile = card.profile
+%>
+<div  class="score-chart-wrapper">
+    <a class="card-tooltip" href="${card.path}" data-toggle="tooltip" title="${card.screen_name}"><img class="avatar-small" src="${u.picture(default=True)}"></a>
+	% if card.percent_score > 75:
+	<div class="score-chart-a">
+	% elif 50 < card.percent_score <= 75:
+	<div class="score-chart-b">
+	% elif 25 < card.percent_score <= 50:
+	<div class="score-chart-c">
+	% else:
+	<div class="score-chart-d">
+    % endif
+	    <div class="score-num">${card.score}</div>
+	    <div class="score-chart" title="${card.score}"><span style="width:${card.percent_score}%"></span></div>
+	</div>
+</div>
+</%def>
+
+
+<%def name="card_small_status(card)">
+%if card.like_num or card.score or card.questions:
+<div class="card-small-status">
+%if card.like_num > 0:
+<span class="card-tooltip" title="${card.like_num} 人收藏"><i class="icon-heart"></i> ${card.like_num}</span>
+%endif
+%if card.score:
+<span class="card-tooltip" title="魅力值高达 ${card.score}"><i class="icon-flag"></i> ${card.score}</span>
+%endif
+%if card.questions:
+<span class="card-tooltip" title="有${len(card.questions)}个问题，已经有${card.answer_num}个得到回答"><i class="icon-question-sign"></i> ${len(card.questions)} <i class="icon-key"></i> ${card.answer_num}</span>
+%endif
+</div>
+%endif
+</%def>
+
+<%def name="card_thumb(card)">
+<% 
+u = card.owner
+profile = card.profile
+%>
+<div class="card-thumb">
+	<div class="card-img-wrapper">
+		<a href="${card.path}">
+			<img src="${card.dynamic_photo(480, 480) or 'http://img3.douban.com/icon/user_large.jpg'}">
+		</a>
+	</div>
+	<div class="card-info-wrapper">
+        <span class="card-small-score pull-right" title="魅力">${card.score}</span>
+        <a href="${u.url()}">
+	        <nobr><img class="avatar-small" src="${u.picture(default=True)}">
+	        ${card.screen_name}</nobr>
+        </a>
+    </div>
+</div>
+</%def>
+
+<%def name="card_widget(card)">
+<%
+u = card.owner
+profile = card.profile
+photo = 'http://img3.douban.com/icon/user_normal.jpg'
+if card.photo:
+    photo = SITE + card.photo
+%>
+<div id="card_widget">
+<link href="${SITE}/static/css/bootstrap-2.3.1.min.css" type="text/css" rel="stylesheet">
+<link href="${SITE}/static/css/bootstrap-responsive-2.3.1.min.css" type="text/css" rel="stylesheet">
+<link href="${SITE}/static/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+<link href="${SITE}/static/css/font-awesome.min.css" type="text/css" rel="stylesheet">
+<link href="${SITE}/static/css/fontello.1.css" type="text/css" rel="stylesheet">
+<link href="${istatic.static('/css/webapp.css')}" type="text/css" rel="stylesheet">
+<div class="card-small">
+    <div class="card-img-wrapper">
+        <a href="${card.url}"><img src="${photo}"><i class="card-small-img-shadow"></i></a>
+    </div>
+    <div class="card-info-wrapper">
+        <h4>
+            <a href="${u.url()}" target="_blank"><img class="avatar-small" src="${u.picture(default=True)}"> ${card.screen_name}</a>
+        </h4>
+        <div id="tags_small_div_${card.id}" class="card-small-info">
+            ${small_card_tags(card)}
+        </div>
+    </div>
+    ${card_small_status(card)}
+</div>
+</div>
+<script src="${SITE}/static/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="${SITE}/static/js/bootstrap.min.js" type="text/javascript"></script>
+<script>
+$(function () {
+    $(".card-tooltip").tooltip();
+});
+</script>
+</%def>
+
+<%def name="ic_lock()">
+<i class="icon-lock"></i><i class="icon-lock"></i><i class="icon-lock"></i>
+</%def>
+
+<%def name="card_tags(card)">
+<div id="tags_div_${card.id}">
+		<p id="mytags_${card.id}">
+		%if card.tags:
+		<span class="muted">觉得自己：</span>
+		%for t in card.tags:
+		<a href="/tag/${escape_path(t)}" class="label">${t}</a>
+		%endfor
+		%else:
+		<span class="muted">没有给自己打标签 ╮(╯▽╰)╭</span>
+		%endif
+		</p>
+		<p id="peopletags_${card.id}">
+		%if card.ptags:
+		<span class="muted">大家心中：</span>
+		%for t in card.ptags:
+			%if t.count > 1:
+				<a href="${t.path}" class="label label-important">${t.name} x${t.count}</a>
+			%else:
+				<a href="${t.path}" class="label label-inverse">${t.name}</a>
+        	%endif
+		%endfor
+		%else:
+		<span class="muted">没有人给他打标签 ╮(╯▽╰)╭</span>
+		%endif
+		<a type="button" role="button" data-toggle="modal" class="btn btn-small" href="#tag_dialog_${card.id}"><i class="icon-tag"></i> 打标签</a>
+		</p>
+</div>
+</%def>

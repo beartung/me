@@ -1,0 +1,86 @@
+<%inherit file="/base.html" />
+<%!
+from config import DEVELOP_MODE
+from webapp.models.consts import TAGS
+%>
+
+<%def name="title()">Group</%def>
+<div class="container">
+    ${make_group(group)}
+</div>
+
+<%def name="make_group(group)">
+%if group:
+<h2>编辑群组<sub>(<a href="${group.owner_card.path}">${group.owner.name}</a>创建)</sub></h2>
+%else:
+<h2>创建群组</h2>
+%endif
+<form id="fileupload" class="form-horizontal" enctype="multipart/form-data" method="post" 
+    %if group:
+    action="/group/${group.id}/edit"
+    %else:
+    action="/group/"
+    %endif
+    >
+    <legend>信息</legend>
+    %if error == "miss_args":
+    <p class="text-error">请填写小组名称，域名和介绍并上传封面</p>
+    %endif
+    <div class="control-group">
+        <label class="control-label" for="inputSkype">头像</label>
+        <div class="controls">
+	    %if group and group.photo_id:
+        <img class="img-rounded" src="${group.dynamic_photo(100, 100)}"><br>
+        %endif
+        <input type="file" name="upload_file"/></p>
+        	<span class="help-inline">图片最大不超过5M <i class="icon-asterisk" style="color:#C2564A"></i></span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="inputSkype">域名</label>
+        <div class="controls">
+            <input type="text" id="inputSkype" name="uid" value="${group and group.uid or uid}" placeholder="仅支持英文数字下划线">
+            <span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+        </div>
+        %if error == "uid_exists":
+        <p class="text-error">该域名已经存在，请换一个</p>
+        %elif error == "uid_invalid":
+        <p class="text-error">请输入合法的域名，仅包含英文数字下划线</p>
+        %endif
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="inputSkype">名称</label>
+        <div class="controls">
+            <input type="text" id="inputSkype" name="name" value="${group and group.name or name}" placeholder="小组名称">
+            <span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="inputSkype">标签</label>
+        <div class="controls">
+            <input type="text" id="inputSkype" name="tags" value="${group and ' '.join(group.tag_names) or tags}" placeholder="以空格分隔，不多于3个">
+        	<span class="help-block">给自己打过相应标签的厂工会自动加入本小组</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="inputSkype">成员名</label>
+        <div class="controls">
+            <input type="text" id="inputSkype" name="member_name" value="${group and group.m_name or member_name}" placeholder="组员名称">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="intro">简介</label>
+        <div class="controls">
+            <textarea name="intro" class="input-xlarge" id="intro" rows="5" placeholder="介绍，200字以内">${group and group.intro or intro}</textarea>
+        </div>
+    </div>
+    <hr>
+    <div class="control-group">
+        <div class="controls">
+            <button type="submit" class="btn btn-primary btn-large">保存</button>
+            <a type="button" class="btn btn-large pull-right" href="/mine">取消</a>
+        </div>
+    </div>
+</div>
+</form>
+</%def>

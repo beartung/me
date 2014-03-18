@@ -1,0 +1,16 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+
+<%def name="title()">Astro</%def>
+<div class="container">
+    <h2>${name}的同学们</h2>
+    <div class="columns">
+        %if cards:
+            %for card in cards:
+	            ${card_ui.card_small(card)}
+            %endfor
+        %else:
+        <p>Oops... 现在还没有同学在这个星座啊！</p>
+        %endif
+    </div>
+</div>

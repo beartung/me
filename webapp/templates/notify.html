@@ -1,0 +1,27 @@
+<%inherit file="/base.html" />
+<%namespace name="utils" file="/utils.html" />
+<%!
+from config import DEVELOP_MODE
+%>
+
+<%def name="title()">Notifications</%def>
+<div class="container">
+    <div class="row-fluid">
+        ${card_all_notify(card)}
+    </div>
+</div>
+
+<%def name="card_all_notify(card)">
+%if card.notifications:
+<h3>Hi！ 你的卡片总共有${len(card.notifications)}个提醒 (￣Ծ￣) </h3>
+<ul class="unstyled new_notify">
+    <% last_n = None %>
+    %for n in card.notifications:
+    ${utils.card_notify_line(n, last_n and last_n.rtime)}
+    <% last_n = n %>
+    %endfor
+</ul>
+%else:
+<h3>Oops... 你的卡片还没有半个提醒 ╮( ╯ 3 ╰ )╭  </h3>
+%endif
+</%def>

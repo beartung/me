@@ -1,0 +1,71 @@
+.suggest-overlay {
+  position: absolute; z-index: 10001; width: auto; background: #fff; /*border: 1px solid #c5c7d2;*/
+    -moz-border-radius : 3px;
+    -webkit-border-radius : 3px;
+    border-radius: 3px 
+}
+.suggest-overlay .bd {
+   min-width: 220px; 
+   line-height: 1; background: #fafafa; color: #b3b3b3; padding: 5px;
+    -moz-border-radius : 3px;
+    -webkit-border-radius : 3px;
+    border-radius: 3px 
+}
+.suggest-overlay ul { color: #333; padding: 3px 0; min-width: 214px; margin:0; }
+.suggest-overlay li { margin: 0; padding: 0; list-style-type: none;}
+.suggest-overlay li b { font-weight: bold }
+.suggest-overlay li span { color: #999 }
+.suggest-overlay img { margin-right: 5px; width: 20px; height: 20px; vertical-align: middle }
+.suggest-overlay li.on {
+  background: #e9f0f8
+}
+.suggest-overlay li a {
+  display: block;
+  padding: 3px 7px;
+  color: #333;
+  text-decoration: none;
+}
+.suggest-overlay li a:hover,
+.suggest-overlay li a:focus,
+.suggest-overlay li a:active {
+  outline: none;
+  color: #333;
+  background: none;
+  background: #e9f0f8
+}
+.mention-highlighter{
+  position: absolute;
+  top:5px;
+  left:7px;
+  white-space: pre-wrap;
+  color:#fff;
+  z-index: 0;
+}
+.me-comm{
+  position: relative;
+}
+.me-comm-textarea{
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+}
+.me-comm-textarea,
+.mention-highlighter{
+  line-height: 1.3;
+  font-family: tahoma;
+  font-size: 14px;
+}
+.mention-highlighter code{
+  border: 0;
+  font-size: 14px;
+  font-family:tahoma;
+  line-height:1.3;
+  background-color:#d2e1f3;
+  color:#d2e1f3;
+  display:inline;
+  padding:1px;
+  margin:0 -1px -2px;
+  -moz-border-radius:2px;
+  -webkit-border-radius:2px;
+  border-radius:2px
+}

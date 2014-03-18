@@ -1,0 +1,481 @@
+<%inherit file="/base.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%namespace name="card_utils" file="/card/utils.html" />
+<%!
+from config import DEVELOP_MODE, SITE, LOGO
+from libs import istatic
+from webapp.models.consts import TAGS, ASTROS, ZODIACS, MARRIAGES, SEXS, LOVES
+from webapp.models.card import Badage, Card
+from webapp.models.event import EventPhoto
+from webapp.models.utils import escape_path, unescape_path
+%>
+<%def name="title()">Card</%def>
+<div class="container">
+	${dou_card(card)}
+</div>
+
+<%def name="ic_unknow()">
+<small><i class="icon-question-sign"></i><i class="icon-question-sign"></i><i class="icon-question-sign"></i></small>
+</%def>
+
+<%def name="dou_card(card)">
+<%
+u = card.owner
+if not u:
+    return ""
+p = {}
+if not DEVELOP_MODE:
+    p = u.profile() or {}
+city = p.get('city', '城市')
+profile = card.profile
+%>
+	<div class="profile-header">
+		<div class="pull-right badages">
+		<a href="/dig" class="me-badage-link me-badage-link-large card-tooltip" title="魅力值">${card.score}</a>
+        %if card.badages:
+
+        %for b in card.badages:
+        <a href="/badage/${b.name}" class="me-badage-link me-badage-link-large card-tooltip" title="${b.name}(${b.intro})"><i class="${b.icon} me-badage"></i></a>
+        %endfor
+        %endif
+		</div>
+		<img class="avatar" src="${u.picture(default=True)}">
+		<h2>
+			${u.name}
+		    %if card.alias:
+		    <span class="muted">(${card.alias})</span>
+		    %endif
+		</h2>
+		<p class="profile-link">
+			<a href="${u.url()}">${u.uid} 的豆瓣主页</a>
+			<span class="hidden-phone">
+		    %if card.skype:
+		    <a href="skype:${card.skype}?chat"><i class="icon-ello-skype"></i>${card.skype}</a>
+		    %endif
+		    %if card.email:
+		    <a href="mailto:${card.email}"><i class="icon-envelope-alt"></i> ${card.email}</a>
+		    %endif
+            %if profile.blog:
+                 %if profile.blog.find('http') == 0:
+                        <a href="${profile.blog}" class="card-tooltip" target="_blank" data-toggle="tooltip"
+                        title="${profile.blog}">
+                   %else:
+                        <a href="http://${profile.blog}" class="card-tooltip" target="_blank" data-toggle="tooltip"
+                        title="${profile.blog}">
+                   %endif
+
+                    <i class="icon-user-md"></i> ${profile.blog}</a>
+            %endif
+		    %if profile.weibo:
+		    <a href="http://weibo.com/${profile.weibo}" target="_blank" class="card-tooltip" data-toggle="tooltip"
+               title="@${profile.weibo}"><i class="icon-ello-sina-weibo"></i></a>
+		    %endif
+		    %if profile.instagram:
+		    <a href="http://instagram.com/${profile.instagram}" target="_blank" class="card-tooltip"
+               data-toggle="tooltip" title="@${profile.instagram}"><i class="icon-ello-instagram"></i></a>
+		    %endif
+		    %if profile.github:
+		    <a href="http://github.com/${profile.github}" target="_blank" class="card-tooltip" data-toggle="tooltip"
+               title="@${profile.github}"><i class="icon-github-alt"></i></a>
+		    %endif
+		    %if profile.code:
+		    <a href="http://code.dapps.douban.com/people/${profile.code}" target="_blank" class="card-tooltip"
+               data-toggle="tooltip" title="${profile.code}"><i class="code-logo"></i></a>
+		    %endif
+		    </span>
+		</p>
+	    %if not req.user:
+	        <a type="button" class="btn btn-large btn-primary" href="/login"> 登录后查看更多信息</a>
+        %else:
+            %if award:
+            %if card.id == req.user.id:
+            <a id="btn_${card.id}_vote" type="button" class="btn disabled"><i class="icon-star"></i> 投票</a>
+            %elif not req.card.photo:
+            <a id="btn_${card.id}_vote" type="button" class="btn disabled" onclick="return alert('上传真相后才能投票！');"><i class="icon-star"></i> 投票</a>
+            %elif award.is_voted(card.id, req.user.id):
+            <a id="btn_${card.id}_vote" type="button" class="btn disabled"><i style="color:#F00" class="icon-star"></i> 已投票</a>
+            %else:
+            <a id="btn_${card.id}_vote" type="button" class="btn" onclick="return vote_card('${card.id}', '${award.badage_id}')"><i class="icon-star"></i> 投票</a>
+            %endif
+            %endif
+
+            <a type="button" role="button" data-toggle="modal" class="btn" href="#tag_dialog_${card.id}"><i class="icon-tag"></i> 打标签</a>
+            %if card.is_liked(req.user.id):
+            <a type="button" class="btn disabled"><i style="color:#F00" class="icon-heart"></i> 已收藏</a>
+            %else:
+            <a id="btn_${card.id}_like" type="button" class="btn btn-danger" onclick="return like_card('${card.id}');">
+                <i class="icon-heart-empty"></i> 收藏</a>
+            %endif
+	    %endif
+
+	</div>
+<div class="row-fluid">
+    <div class="span8">
+	    <section>
+            %if req.user.id == card.id:
+                <a type="button" class="pull-right" href="/make"><i class="icon-edit"></i>修改资料</a>
+            %endif
+	    	<p>
+	    		<span class="muted">基本资料：</span>
+	    		%if profile.hometown:
+	    			%if profile.province:
+	    			来自 <a href="/province/${profile.province}">${profile.province}</a>
+			        %endif
+			        <a href="/hometown/${profile.hometown}">${profile.hometown}</a>
+		        %endif
+		    	${card_utils.card_private_info(card)}
+	    	</p>
+	    	<p>
+			    <span class="muted">其他信息：</span>
+			    ${str(u.reg_time)[:10]}注册,
+			    %if card.join_time:
+		            ${str(card.join_time)[:10]}入职,
+		        %else:
+		            ${ic_unknow()}
+		        %endif
+		        常居: ${city}
+	            %if profile.resume:
+			    	曾在${profile.resume}
+			    %endif
+	    	</p>
+	        ${card_utils.card_tags(card)}
+	        ${card_utils.card_tag_dialog(card)}
+	        %if profile.intro:
+	        <p>
+	        	<span class="muted">个人简介：</span>
+	        	${profile.intro}
+	        </p>
+	        %endif
+	    </section>
+        ${card_answers(card)}
+        ${card_utils.card_vote_dialog(award, card)}
+        <section>
+            <h3>${card.screen_name}的广播<sub>(<a href="${card.path}blogs">全部</a>)</sub></h3>
+		    %if len(blogs):
+		    <div class="question-list">
+		    %for b in blogs[:3]:
+		    ${blog_utils.blog_ui(b)}
+		    %endfor
+		    </div>
+		    %else:
+		    <p>Oops...还没广播哦~</p>
+		    %endif
+        </section>
+    </div>
+    <div class="span4">
+    	<section>
+	        %if req.user:
+		        %if card.photo:
+			        <img src="${card.photo}"><br><br>
+			        <a class="btn btn-info btn-block" onclick="return request_card_change_photo('${card.id}');"><i class="icon-picture"></i> 求换一个真相</a>
+		        %else:
+		        没有真相 ╮(╯▽╰)╭ <br>
+		        <a class="btn btn-warning btn-block" onclick="return request_card_photo('${card.id}');"><i class="icon-picture"></i> 求真相</a>
+		        %endif
+	        %endif
+    	</section>
+##            <ul class="unstyled">
+    %if req.user:
+        <!--
+        <li><i class="icon-user"></i>
+        %if card.name:
+        ${card.name}
+        %else:
+            ${ic_unknow()}
+        %endif
+        </li>
+        -->
+##        %if card.alias:
+##        <li><i style="color:#DDD" class="icon-user"></i>
+##            ${card.alias}
+##        </li>
+##        %endif
+##        <li><i class="icon-phone"></i>
+##        %if card.phone:
+##            %if card.can_view(req.user):
+##                ${card.phone}
+##            %else:
+##                ${ic_lock()}
+##            %endif
+##        %else:
+##            ${ic_unknow()}
+##        %endif
+    %endif
+##        </li>
+##        <li><i class="icon-map-marker"></i>
+##        ${city}
+##        </li>
+##        %if profile.hometown:
+##        <li><i class="icon-home"></i>
+##        %if profile.province:
+##        <a class="btn-link" href="/province/${profile.province}">${profile.province}</a>&nbsp;
+##        %endif
+##        <a class="btn-link" href="/hometown/${profile.hometown}">${profile.hometown}</a>
+##        </li>
+##        %endif
+##        %if card.badages:
+##        <li>
+##        <i class="icon-trophy"></i>
+##        %for b in card.badages:
+##        <a href="/badage/${b.name}" title="${b.name}(${b.intro})"><i class="${b.icon} me-badage"></i>${b.name}</a>
+##        %endfor
+##        </li>
+##        %endif
+##        <li>${card_utils.card_private_info(card)}</li>
+##        <hr>
+##        <li>
+##        <i class="icon-linkedin-sign"></i>
+##        ${str(u.reg_time)[:10]}注册
+##        </li>
+##    %if req.user:
+##        <li>
+##        <i class="icon-linkedin"></i>
+##        %if card.join_time:
+##            ${str(card.join_time)[:10]}入职
+##        %else:
+##            ${ic_unknow()}
+##        %endif
+##        </li>
+##        <hr>
+##        <li><i class="icon-ello-skype"></i>
+##            %if card.skype:
+##            <a href="skype:${card.skype}?chat">${card.skype}</a>
+##            %else:
+##            ${ic_unknow()}
+##            %endif
+##        </li>
+##        <li><i class="icon-envelope-alt"></i>
+##        %if card.email:
+##        <a href="mailto:${card.email}" target="_blank">${card.email}</a>
+##        %else:
+##        ${ic_unknow()}
+##        %endif
+##        </li>
+##        %if profile.weibo:
+##        <li><i class="icon-ello-sina-weibo"></i>
+##        <a href="http://weibo.com/${profile.weibo}" target="_blank">http://weibo.com/${profile.weibo}</a>
+##        </li>
+##        %endif
+##        %if profile.instagram:
+##        <li><i class="icon-ello-instagram"></i>
+##        <a href="http://instagram.com/${profile.instagram}" target="_blank">http://instagram.com/${profile.instagram}</a>
+##        </li>
+##        %endif
+##        %if profile.code:
+##        <li><i class="code-logo"></i>
+##        <a href="http://code.dapps.douban.com/people/${profile.code}" target="_blank">http://code.douban.com/people/${profile.code}</a>
+##        </li>
+##        %endif
+##        %if profile.github:
+##        <li><i class="icon-github-alt"></i>
+##        <a href="https://github.com/${profile.github}" target="_blank">https://github.com/${profile.github}</a>
+##        </li>
+##        %endif
+##        %if profile.resume:
+##        <li><i class="icon-tasks"></i>
+##        ${profile.resume}
+##        </li>
+##        %endif
+##        %if profile.intro:
+##        <hr>
+##        <li>
+##        <pre><i class="icon-quote-left"></i>${profile.intro}<i class="icon-quote-right"></i></pre>
+##        </li>
+##        %endif
+##    %endif
+##	    </ul>
+	<div id="card_${card.id}_likers">
+	    ${card_likers(card)}
+	</div>
+##    ${card_comments(card)}
+    <hr>
+    <br>
+###    %if card.photo_id > 1:
+###    <% urls = card.photo_urls[1:] %>
+###    <br style="clear:both">
+###    <hr>
+###    <h3>过往真相</h3>
+###    <div id="old-photos" class="carousel slide">
+###        <ol class="carousel-indicators pull-right">
+###            <% index = 0 %>
+###            %for d in urls:
+###            %if index == 0:
+###            <li data-target="#old-photos" data-slide-to="${index}" class="active"></li>
+###            %else:
+###            <li data-target="#old-photos" data-slide-to="${index}"></li>
+###            %endif
+###            <% index = index + 1 %>
+###            %endfor
+###        </ol>
+###        <div class="carousel-inner">
+###            <% index = 0 %>
+###            %for u in urls:
+###            %if index == 0:
+###            <div class="active item">
+###            %else:
+###            <div class="item">
+###            %endif
+###                    <img src="${u}">
+###            </div>
+###            <% index = index + 1 %>
+###            %endfor
+###        </div>
+###        <a class="carousel-control left" href="#old-photos" data-slide="prev">&lsaquo;</a>
+###        <a class="carousel-control right" href="#old-photos" data-slide="next">&rsaquo;</a>
+###    </div>
+###    %endif
+    </div>
+</div>
+</%def>
+
+<%def name="card_answers(card)">
+<div id="card_answers_div">
+    <a id="answers"></a>
+    <section class="media">
+    <h3>所有奇怪的问题都向${card.screen_name}涌来吧</h3>
+    %if not card.questions:
+    <p>现在还没有人问${card.screen_name}，成为第一个问他/她奇怪问题的厂工吧！！</p>
+    %endif
+    <form class="me-comm" method="post" action="${card.path}ask">
+        <p class="highlighter mention-highlighter"></p>
+    <fieldset>
+        <textarea id="input_question_${card.id}" class="me-comm-textarea" rows="2" name="content" placeholder="什么八卦问题都可以问哦〜 请随意 ：）"></textarea>
+    <label class="checkbox">
+        <input id="anonymous" type="checkbox" name="anonymous">匿名
+    </label>
+    <input type="button" class="btn btn-primary" value="提问" onclick="return ask_card('${card.id}','input_question_${card.id}');">
+    </fieldset>
+    </form>
+    %if card.questions:
+    <p class="muted">${card.screen_name}有${len(card.questions)}个问题，已经有${card.answer_num}个回答。</p>
+    <div class="media-list">
+    %for q in card.questions:
+    ${card_question(q)}
+    %endfor
+    </div>
+    %endif
+    </section>
+</div>
+</%def>
+
+<%def name="card_question(q)">
+<h5><strong><i class="icon-question-sign"></i> ${q.title}</strong>
+    <span class="pull-right">
+    %if q.is_anonymous:
+    <i class="icon-user"></i>
+    %else:
+    <a href="${q.author_card and q.author_card.path}">${q.author.name}</a>
+    %endif
+</span>
+</h5>
+%if q.answer and q.answer.blog:
+<p>
+    <i class="icon-key"></i>
+    <%
+    b = q.answer.blog
+    %>
+    %if b.content:
+    ${b.html|n}
+    %endif
+	%if b.photo_id > 0:
+    <a href="#dialog-blog-photo-${b.id}" role="button" data-toggle="modal">
+        <img src="${b.dynamic_photo(300, 300)}" class="media-img">
+    </a>
+    <div id="dialog-blog-photo-${b.id}"
+        class="modal hide text-center"
+        style="background:none;box-shadow:none;border-radius:0;border:none"
+        tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+        <img src="${b.photo}" style="max-height:80%;">
+    </div>
+    %endif
+    %if b.audio_id > 0:
+    <p>
+    <audio controls="controls">
+    <source src="${b.audio}" type="audio/${b.audio_ftype(b.audio_id)}" preload="false"/>
+    </audio>
+    </p>
+    %endif
+    <a href="${b.path}" class="muted pull-right">${b.ctime}</a>
+</p>
+%else:
+<p class="muted">
+%if req.user and req.user.id == card.id:
+<a type="button" role="button" data-toggle="modal" href="#answer_dialog_${q.id}" class="btn btn-success">回答</a>
+${answer_dialog(q, card)}
+%else:
+现在还没有被回答呢~
+%endif
+</p>
+%endif
+<hr>
+</%def>
+
+<%def name="answer_dialog(question, card)">
+%if question:
+<div id="answer_dialog_${question.id}" class="modal hide fade">
+    <form method="post" action="${card.path}answer" enctype="multipart/form-data">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>回答问题：${question.title}</h3>
+        </div>
+        <div class="modal-body">
+            <textarea rows="2" class="me-comm-textarea pull-left input-xxlarge" name="update_text" placeholder="这是一个朴素的发布框"></textarea>
+            <input id="update-file" type="file" name="update_file" title="文件不能大于5M" class="pull-right"/>
+            <label for="update-file" class="muted pull-right">支持jpg, png, gif, mp3</label>
+            <input type="hidden" name="question_id" value="${question.id}"/>
+        </div>
+        <div class="modal-footer">
+            <input type="submit" class="btn btn-primary" value="提交">
+        </div>
+    </form>
+</div>
+%endif
+</%def>
+
+<%def name="card_comments(card)">
+<div id="card_comments_div">
+    <a id="card_comments"></a>
+    <section>
+	    <h3>${card.comment_num}留言</h3>
+	    %if card.comment_num > 0:
+	    <ul class="media-list">
+	        %for comment in card.comments:
+	        <li id="comment_${comment.id}" class="media">
+	        <a class="pull-left" href="${comment.author_card.path}">
+	            <img class="media-object" src="${comment.author.picture(default=True)}">
+	        </a>
+	        <div class="media-body">
+                <h4 class="media-heading"><a href="${comment.author_card.path}">${comment.author.name}</a> <small class="muted">${comment.rtime}</small>
+                    %if req.user and req.user.id == comment.author_id:
+                    <a class="pull-right btn btn-link" onclick="return uncomment_card('${card.id}','${comment.id}');">x</a>
+                    %endif
+                </h4>
+	            <div class="media">
+	                ${comment.html|n}
+	            </div>
+	        </div>
+	        </li>
+	        %endfor
+	    </ul>
+	    %else:
+	    <p class="muted">现在还没有留言  ╮(╯▽╰)╭  &nbsp;<i class="icon-comment-alt"></i> 来一发？</a></p>
+		%endif
+		<form class="me-comm" method="post" action="${card.path}comment">
+		    <p class="highlighter mention-highlighter"></p>
+		    <textarea id="input_comment_${card.id}" class="me-comm-textarea" rows="2" name="content" placeholder="随意吐槽 ：）"></textarea><br/>
+		    <input type="button" class="btn btn-primary btn-large" value="留言" onclick="return comment_card('${card.id}','input_comment_${card.id}');">
+		</form>
+	</section>
+</div>
+</%def>
+
+<%def name="card_likers(card)">
+<section>
+	<h3 style="color:#D14836"><i class="icon-heart"></i> ${card.like_num}</h3>
+	<div class="avatar-list">
+		%for l in card.likers()[:36]:
+		<a href="/card/${l.uid}/"><img class="avatar" src="${l.picture(default=True)}"></a>
+		%endfor
+	</div>
+</section>
+</%def>

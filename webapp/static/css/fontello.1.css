@@ -1,0 +1,74 @@
+@charset "UTF-8";
+
+@font-face {
+  font-family: 'fontello';
+  src: url("../font/fontello.eot?24470169");
+  src: url("../font/fontello.eot?24470169#iefix") format('embedded-opentype'), url("../font/fontello.woff?24470169") format('woff'), url("../font/fontello.ttf?24470169") format('truetype'), url("../font/fontello.svg?24470169#fontello") format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
+/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
+/*
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: 'fontello';
+    src: url('../font/fontello.svg?24470169#fontello') format('svg');
+  }
+}
+*/
+[class^="icon-ello-"]:before,
+[class*=" icon-ello-"]:before {
+  font-family: 'fontello';
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: 0.2em;
+  text-align: center;
+/* opacity .8 */
+/* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+/* Animation center compensation - magrins should be symmetric */
+/* remove if not needed */
+  margin-left: 0.2em;
+/* you can be more comfortable with increased icons size */
+/* font-size: 120%; */
+/* Uncomment for 3D effect */
+/* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+
+.icon-ello-android:before { content: '\26'; } /* '&amp;' */
+.icon-ello-reddit:before { content: '\3e'; } /* '&gt;' */
+.icon-ello-plancast:before { content: '\50'; } /* 'P' */
+.icon-ello-dropbox:before { content: '\64'; } /* 'd' */
+.icon-ello-umbrella:before { content: '\2602'; } /* '☂' */
+.icon-ello-music:before { content: '\e073'; } /* '' */
+.icon-ello-male:before { content: '\e07b'; } /* '' */
+.icon-ello-female:before { content: '\e098'; } /* '' */
+.icon-ello-chart-pie:before { content: '\e751'; } /* '' */
+.icon-ello-brush:before { content: '\e79a'; } /* '' */
+.icon-ello-moon-inv:before { content: '\e7a0'; } /* '' */
+.icon-ello-gauge:before { content: '\e7a2'; } /* '' */
+.icon-ello-bicycle:before { content: '\e80a'; } /* '' */
+.icon-ello-fire-station:before { content: '\e817'; } /* '' */
+.icon-ello-garden:before { content: '\e81a'; } /* '' */
+.icon-ello-giraffe:before { content: '\e81b'; } /* '' */
+.icon-ello-harbor:before { content: '\e81f'; } /* '' */
+.icon-ello-minefield:before { content: '\e826'; } /* '' */
+.icon-ello-police:before { content: '\e82b'; } /* '' */
+.icon-ello-religious-jewish:before { content: '\e831'; } /* '' */
+.icon-ello-soccer:before { content: '\e837'; } /* '' */
+.icon-ello-town-hall:before { content: '\e83c'; } /* '' */
+.icon-ello-qq:before { content: '\f32a'; } /* '' */
+.icon-ello-instagram:before { content: '\f32d'; } /* '' */
+.icon-ello-evernote:before { content: '\f333'; } /* '' */
+.icon-ello-skype:before { content: '\f339'; } /* '' */
+.icon-ello-sina-weibo:before { content: '\f33f'; } /* '' */
+.icon-ello-mic:before { content: '🎤'; } /* '\1f3a4' */
+.icon-ello-headphones:before { content: '🎧'; } /* '\1f3a7' */
+.icon-ello-volume-off:before { content: '🔇'; } /* '\1f507' */
+.icon-ello-volume-up:before { content: '🔊'; } /* '\1f50a' */
+.icon-ello-rocket:before { content: '🚀'; } /* '\1f680' */

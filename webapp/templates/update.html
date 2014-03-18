@@ -1,0 +1,64 @@
+<%inherit file="/base.html" />
+<%namespace name="utils" file="/utils.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%!
+from config import DEVELOP_MODE, LOGO
+from webapp.models.consts import EMOTICONS
+from webapp.models.notify import Notify
+from webapp.models.card import Card, Badage
+from webapp.models.event import EventPhoto
+%>
+<%def name="title()">Update</%def>
+<div class="container">
+    <ul class="nav nav-pills">
+        %if cate != 'n':
+        <li class="active">
+        %else:
+        <li>
+        %endif
+        <a href="/update">广播</a>
+        </li>
+        %if cate == 'n':
+        <li class="active">
+        %else:
+        <li>
+        %endif
+        <a href="/update?cate=n">只看动态</a>
+        </li>
+    </ul>
+	<div class="row-fluid">
+		<div class="span8">
+			<div class="media">
+				<form method="post" action="/update" enctype="multipart/form-data">
+					%if error:
+					<p class="text-error">说点什么或者发个图吧~</p>
+					%endif
+					<div class="clearfix">
+						<textarea id="update-text" class="me-comm-textarea" name="update_text" placeholder="这是一个朴素的发布框"></textarea>
+						<input id="update-file" class="pull-right" type="file" name="update_file" title="支持jpg, png, gif, mp3,文件不能大于5M"/>
+                        <p id="update-emoticon" class="hide">
+                        %for e in EMOTICONS:
+                        <a class="btn" onclick="add_emoticon('#update-text', '${e}')">${e}</a>
+                        %endfor
+                        </p>
+						<button type="submit" class="btn btn-primary">来一发</button>
+                        <a onclick="$('#update-emoticon').show()"><i class="icon-github-alt"></i></a>
+					</div>
+				</form>
+				<hr>
+			</div>
+			%for b in blogs:
+			${blog_utils.blog_ui(b)}
+			%endfor
+			${utils.pager(prefix, total, start, limit)}
+		</div>
+		<div class="span4">
+	        <h3>最新话题</h3>
+            <div>
+            %for t in topics[:20]:
+            <a href="${t.path}" class="btn card-tag">#${t.name}#</a>
+            %endfor
+            </div>
+		</div>
+	</div>
+</div>

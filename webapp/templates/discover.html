@@ -1,0 +1,334 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%namespace name="event_utils" file="/event/events.html" />
+<%!
+from webapp.models.card import ZODIACS, ASTROS, PROVINCE
+from webapp.models.blog import Blog
+from webapp.models.event import EventPhoto
+%>
+<%def name="title()">Discover</%def>
+<div class="container">
+    <div class="row-fluid">
+        <div class="span8">
+        %if card.profile.astro < 1 or card.profile.marriage < 1:
+        <div class="alert alert-error">
+        	<button type="button" class="close" data-dismiss="alert">&times;</button>
+        	填写自己的
+        	%if card.profile.astro == 0:
+	        	星座
+	        %elif card.profile.marriage == 0:
+	        	感情状况
+		    %endif
+		    才能看到别人的哟。
+		    <a href="/make">现在就去填</a>
+		</div>
+		%endif
+        	<section class="hidden-phone">
+                <h3>最新事件<sub>（<a href="/events">全部</a>）</sub></h3>
+                <div class="row-fluid">
+                %for event in events[:3]:
+                ${event_utils.event_item(event)}
+                %endfor
+                </div>
+            </section>
+	    	<section>
+	            <h3>最新真相<sub><a href="/cards?cate=photo">（全部）</a></h3>
+	            <div class="card-thumbs clearfix">
+		             %for d in new_photo_cards[:6]:
+		                ${card_ui.card_thumb(d)}
+		             %endfor
+	            </div>
+	        </section>
+        	<section>
+        		<div class="row-fluid">
+        			<div class="span4">        			
+			            <h3>魅力值排名<sub><a href="/dig">（花名榜）</a></h3>
+			                %for d in score_cards[:10]:
+			                ${card_ui.card_chart(d)}
+			                %endfor
+			        </div>
+			        <div class="span4">
+			            <h3>单身/萌/妹子<sub><a href="/dig">（更多）</a></h3>
+			                %for d in girl_cards[:10]:
+			                ${card_ui.card_chart(d)}
+			                %endfor
+			        </div>
+                    <div class="span4">
+                        <h3>少年榜<sub><a href="/dig">（更多）</a></h3>
+                            %for d in boy_cards[:10]:
+                            ${card_ui.card_chart(d)}
+                            %endfor
+                    </div>
+            </section>
+        	<section>
+	            <h3>星座分布
+	            %if not card or not card.profile.astro:
+	            <sub class="text-error">${card_ui.ic_lock()} 请<a href="/make">设置星座</a>后查看</sub>
+	            %endif
+	            </h3>
+	            %if card and card.profile.astro:
+##	            <div id="astro-chart"></div>
+	            <div class="astro-chart">
+	                %for i, t, c, p in astro_dist:
+	                <a href="/astro/${t}" style="width:${p}%" class="card-tooltip astro-chart-num-${i}" title="${c}人，${'%d' % p}%">${t}</a>
+	                %endfor
+	            </div>
+	            %endif
+            </section>
+        	<section class="latest-photo-blog hidden-phone">
+                <h3>最新图片</h3>
+	            <div class="blog-thumbs clearfix">
+                %for b in new_photos[:12]:
+                %if isinstance(b, Blog):
+                ${blog_utils.photo_blog_thumb(b)}
+                %else:
+                ${event_utils.photo_thumb(b)}
+                %endif
+                %endfor
+	            </div>
+            </section>
+        </div>
+		<div class="span4">
+			<section class="relase-notes hidden-phone">
+	            ${release_notes()}
+            </section>
+        	<section class="latest-update hidden-phone">
+	            <h3>最新广播<sub><a href="/update">（全部）</a></h3>
+	            <div class="media-sidebar">
+	            %for b in blogs[:20]:
+                ${blog_utils.blog_ui(b)}
+	            %endfor
+	            </div>
+	            <a href="/update" class="btn btn-link btn-block">更多广播…</a>
+            </section>
+        	<section class="badge-list">
+	        	<h3>徽章</h3>
+	            <div class="badge-list">
+	                <a class="me-badage-link me-badage-link-large card-tooltip" data-toggle="tooltip" title="徽章"><i class="icon-trophy me-badage"></i></a>
+	                %for b in all_badages:
+	                <a class="me-badage-link me-badage-link-large card-tooltip" data-toggle="tooltip"
+	                    href="/badage/${b.name}" title="${b.name}(${b.intro})"><i class="${b.icon} me-badage"></i></a>
+	                %endfor
+	            </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<%def name="tiny_card(card)">
+<span>
+<a href="${card.path}">
+    <img src="${card.owner.picture(default=True)}">
+</a>
+<a href="${card.path}" style="padding-left:8px">${card.screen_name}</a>
+</span>
+</%def>
+
+<%def name="body_script()">
+##<script src="/static/js/highcharts-2.3.5.js"></script>
+##<script>
+##$(function () {
+##    Highcharts.getOptions().colors = $.map(Highcharts.getOptions().colors, function(color) {
+##        return {
+##            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
+##            stops: [
+##            [0, color],
+##            [1, Highcharts.Color(color).brighten(-0.3).get('rgb')] // darken
+##            ]
+##        };
+##    });
+##    chart = new Highcharts.Chart({
+##        chart: {
+##            renderTo: 'zodiac-chart',
+##            plotBackgroundColor: null,
+##            plotBorderWidth: null,
+##            plotShadow: false
+##        },
+##        title: {
+##            text: '生肖分布'
+##        },
+##        tooltip: {
+##            pointFormat: '{series.name}<b>{point.percentage}%</b>',
+##            percentageDecimals: 1
+##        },
+##        plotOptions: {
+##            pie: {
+##                allowPointSelect: true,
+##                cursor: 'pointer',
+##                dataLabels: {
+##                    enabled: true,
+##                    color: '#000000',
+##                    connectorColor: '#000000',
+##                    formatter: function() {
+##                        return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
+##                    }
+##                }
+##            }
+##        },
+##        series: [{
+##            type: 'pie',
+##            name: '占',
+##            data: [
+##            %for z, n, c, p in zodiac_dist:
+##            %if card.profile.zodiac == z:
+##            {
+##                name: "${n}",
+##                y: ${c},
+##                sliced: true,
+##                selected: true
+##            },
+##            %else:
+##            ["${n}", ${c}],
+##            %endif
+##            %endfor
+##            ]
+##        }]
+##    });
+##
+##    chart = new Highcharts.Chart({
+##        chart: {
+##            renderTo: 'astro-chart',
+##            plotBackgroundColor: null,
+##            plotBorderWidth: null,
+##            plotShadow: false
+##        },
+##        title: {
+##            text: '星座分布'
+##        },
+##        tooltip: {
+##            pointFormat: '{series.name}<b>{point.percentage}%</b>',
+##            percentageDecimals: 1
+##        },
+##        plotOptions: {
+##            pie: {
+##                allowPointSelect: true,
+##                cursor: 'pointer',
+##                dataLabels: {
+##                    enabled: true,
+##                    color: '#000000',
+##                    connectorColor: '#000000',
+##                    formatter: function() {
+##                        return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
+##                    }
+##                }
+##            }
+##        },
+##        series: [{
+##            type: 'pie',
+##            name: '占',
+##            data: [
+##            %for z, n, c, p in astro_dist:
+##            %if card.profile.astro == z:
+##            {
+##                name: "${n}",
+##                y: ${c},
+##                sliced: true,
+##                selected: true
+##            },
+##            %else:
+##            ["${n}", ${c}],
+##            %endif
+##            %endfor
+##            ]
+##        }]
+##    });
+##
+##
+##});
+##</script>
+</%def>
+
+<%def name="release_notes()">
+<div class="alert">
+    <h3>最新上线功能！≖‿≖✧
+        <script>
+            function show_history(){
+            $("#old-history").show();
+            $("#btn-show-history").hide();
+            $("#btn-hide-history").show();
+            };
+            function hide_history(){
+            $("#old-history").hide();
+            $("#btn-show-history").show();
+            $("#btn-hide-history").hide();
+            };
+        </script>
+        <a id="btn-show-history" class="btn btn-link pull-right" onclick="show_history();">全部历史</a>
+        <a id="btn-hide-history" class="hide btn btn-link pull-right" onclick="hide_history();">收起历史</a>
+    </h3>
+    <hr>
+    <ul>
+        <li>新加群组，大家来建组吧！<span class="pull-right">5/10</span></li>
+        <li>事件图片支持圈人，来圈圈吧！<span class="pull-right">4/24</span></li>
+        <li>事件开放，图片支持批量上传<span class="pull-right">4/17</span></li>
+    </ul>
+    <ul id="old-history" class="hide">  
+        <li>卡片问答系统，支持匿名，赶紧去问吧！<span class="pull-right">4/13</span></li>
+        <li>投票选举上线，快来选最近真相奖吧！<span class="pull-right">4/5</span></li>
+        <li>广播支持主题##，卡片页面广播<span class="pull-right">3/21</span></li>
+        <li>广播快糙猛版上线，支持jpg,png,gif,mp3<span class="pull-right">3/21</span></li>
+        <li>导航重构成google+风格<span class="pull-right">3/19</span></li>
+        <li>卡片新加入魅力指数！<span class="pull-right">3/17</span></li>
+        <li>@时有提示了，熊猫饼饼加入！<span class="pull-right">3/15</span></li>
+        <li>Code里增加花名册卡片！<span class="pull-right">3/15</span></li>
+        <li>卡片新加入战斗力指数！<span class="pull-right">3/15</span></li>
+        <li>给卡片留言可以@uid或@name来at其他人了！<span class="pull-right">3/09</span></li>
+        <li>卡片上自己的留言终于可以删除了！<span class="pull-right">3/08</span></li>
+        <li>在时间线里也可以看到事件啦！<span class="pull-right">3/08</span></li>
+        <li>个人卡片页面放出过往真相照 ：）<span class="pull-right">3/08</span></li>
+        <li>事件单张图片页，而且可以回复，+1<span class="pull-right">3/07</span></li>
+        <li>新加豆瓣事件<span class="pull-right">3/06</span></li>
+        <li>UI配色，导航调整<span class="pull-right">3/05</span></li>
+        <li>增加真相资料，徽章上线<span class="pull-right">3/04</span></li>
+        <li>真相按钮，时间线上线，200张卡片<span class="pull-right">3/02</span></li>
+        <li>回复，tag换成ajax，加入翻页<span class="pull-right">3/01</span></li>
+        <li>UI重构，花名册八卦<span class="pull-right">2/28</span></li>
+        <li>whshang加入，浏览发现上线<span class="pull-right">2/27</span></li>
+        <li>提醒系统，收藏换ajax，145张卡片<span class="pull-right">2/26</span></li>
+        <li>收藏/tag/留言板，irc里发布，87张卡片<span class="pull-right">2/25</span></li>
+        <li>上传真相，搜索<span class="pull-right">2/24</span></li>
+        <li>编辑页，卡片页<span class="pull-right">2/21</span></li>
+        <li>项目开始<span class="pull-right">2/16</span></li>
+    </ul>
+</div>
+</%def>
+
+<%def name="photo_cards()">
+<h3>最新真相<sub><a href="/cards?cate=photo">（全部）</a></h3>
+%if len(new_photo_cards) > 1:
+    <hr>
+    <div id="new-photo-cards" class="carousel slide">
+        <% index = 0 %>
+        <div class="carousel-inner">
+            %for index in xrange(0, len(new_photo_cards), 2):
+                %if index == 0:
+                <div class="active item">
+                %else:
+                <div class="item">
+                %endif
+                <span class="card-middle pull-left">
+                ${card_ui.card_small(new_photo_cards[index])}
+                </span>
+                <span class="card-middle pull-left">
+                ${card_ui.card_small(new_photo_cards[index+1])}
+                </span>
+                </div>
+            %endfor
+            </div>
+            <br>
+            <ol class="carousel-indicators">
+            %for index in xrange(0, len(new_photo_cards), 2):
+                %if index == 0:
+                <li data-target="#new-photo-cards" data-slide-to="${index}" class="active"></li>
+                %else:
+                <li data-target="#new-photo-cards" data-slide-to="${index}"></li>
+                %endif
+                <% index = index + 1 %>
+            %endfor
+            </ol>
+            <a class="carousel-control left" href="#new-photo-cards" data-slide="prev">&lsaquo;</a>
+            <a class="carousel-control right" href="#new-photo-cards" data-slide="next">&rsaquo;</a>
+        </div>
+%endif
+</%def>

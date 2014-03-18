@@ -1,0 +1,55 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+<%def name="title()">Magic</%def>
+<%!
+from webapp.models.card import ZODIACS, ASTROS, PROVINCE
+%>
+
+<section>
+    <h3>星座分布
+    %if not card or not card.profile.astro:
+    <sub class="text-error">${card_ui.ic_lock()} 请<a href="/make">设置星座</a>后查看</sub>
+    %endif
+    </h3>
+    %if card and card.profile.astro:
+    <div class="astro-chart">
+        %for i, t, c, p in astro_dist:
+        <a href="/astro/${t}" style="width:${p}%" class="card-tooltip astro-chart-num-${i}" title="${c}人，${'%d' % p}%">${t}</a>
+        %endfor
+    </div>
+    %endif
+</section>
+<section>
+    <h3>生肖分布
+    %if not card or not card.profile.zodiac:
+    <sub class="text-error">${card_ui.ic_lock()} 请<a href="/make">设置生肖</a>后查看</sub>
+    %endif
+    </h3>
+    %if card and card.profile.zodiac:
+    <div class="zodiac-chart">
+    %for i, t, c, p in zodiac_dist:
+    <a href="/zodiac/${t}" style="width:${p}%" class="card-tooltip zodiac-chart-num-${i}" title="${c}人，${'%d' % p}%">${t}</a>
+    %endfor
+    </div>
+    %endif
+</section>
+<section>
+    <h3>省份分布
+    %if not card or not card.profile.province:
+    <sub class="text-error">${card_ui.ic_lock()} 请<a href="/make">设置省份</a>后查看</sub>
+    %endif
+    </h3>
+    %if card and card.profile.province:
+    <div class="province-chart clear-fix">
+        %for c, p, n in province_dist:
+        <%
+        r = 180*(100-p)/100
+        g = 200*(100-p)/100
+        b = 200*(100-p)/100
+        %>
+        <a href="/province/${n}" style="width:${p < 50 and p*2 or p}%;background:rgb(${'%d' % r},${'%d' % g},${'%d' % b})"
+            class="card-tooltip" title="${c}人，${'%d' % p}%">${n}</a>
+        %endfor
+    </div>
+    %endif
+</section>

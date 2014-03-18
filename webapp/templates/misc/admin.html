@@ -1,0 +1,78 @@
+<%inherit file="/base.html" />
+<%def name="title()">Admin</%def>
+<div class="container">
+    <div class="row-fluid">
+        <div class="hero-unit">
+        <form method="post" action="/admin">
+        <h2>隐藏卡片<h2>
+        <input name="hide_id" value="" placeholder="要隐藏卡片的id">
+        <button type="submit" class="btn btn-primary">确认</button>
+        <br>
+        <h2>新加/修改徽章<h2>
+        <input id="b-id" name="badage_id" value="" placeholder="徽章id">
+        <input id="b-name" name="badage_name" value="" placeholder="徽章名字">
+        <input id="b-intro" name="badage_intro" value="" placeholder="徽章介绍">
+        <input id="b-icon" name="badage_icon" class="input-xlarge" value="" placeholder="图标，使用fontawesome的class name">
+        <button type="submit" class="btn btn-primary">确认</button>
+        <br>
+        %if badages:
+        <ul class="unstyled clearfix">
+            %for b in badages:
+            <li class="pull-left"><a type="button" class="btn" 
+                onclick="set_badage(['${b.id}','${b.name}','${b.intro}', '${b.icon}']);">${b.name}</a></li>
+            %endfor
+        </ul>
+        %endif
+        <h2>发布徽章<h2>
+        <input name="add_badage_name" value="" placeholder="徽章名字">
+        <input name="badage_user_ids" class="input-xlarge" value="" placeholder="发徽章的用户id/uid, 用空格分开">
+        <button type="submit" class="btn btn-primary">确认</button>
+        <br>
+        <h2>新加/修改投票奖项<h2>
+        <input id="a-name" name="award_badage_name" value="" placeholder="奖项徽章名字">
+        <input id="a-sponsor" name="award_sponsor" value="" placeholder="冠名">
+        <input id="a-num" name="award_num" value="" placeholder="奖项人数">
+        <input id="a-days" name="award_vote_days" value="" placeholder="投票天数">
+        <button type="submit" class="btn btn-primary">确认</button>
+        <br>
+        %if awards:
+        <ul class="unstyled clearfix">
+            %for a in awards:
+            <li><a type="button" class="btn"
+                onclick="set_award(['${a.name}','${a.sponsor}','${a.num}', '${a.days}']);">${a.name}</a></li>
+            %endfor
+        </ul>
+        %endif
+        </form>
+        <h2>查询Tag<h2>
+        <form method="get" action="/admin">
+        <input id="t-name" name="q_card" value="" placeholder="查询用户id">
+        <input id="t-tag" name="q_tag" value="" placeholder="查询tag">
+        <button type="submit" class="btn btn-primary">确认</button>
+        %if taggers:
+        <ul class="unstyled clearfix">
+            %for u in taggers:
+            <li><a href="${u.path}">${u.screen_name}</a></li>
+            %endfor
+        </ul>
+        %endif
+        </form>
+        </div>
+    </div>
+    <script>
+        function set_badage(args){
+            ids = ['b-id', 'b-name', 'b-intro', 'b-icon'];
+            for (var i = 0; i < args.length; i++){
+                $("#"+ids[i])[0].value = args[i];
+            }
+            return true;
+        }
+        function set_award(args){
+            ids = ['a-name', 'a-sponsor', 'a-num', 'a-days'];
+            for (var i = 0; i < args.length; i++){
+                $("#"+ids[i])[0].value = args[i];
+            }
+            return true;
+        }
+    </script>
+</div>

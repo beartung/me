@@ -3,7 +3,10 @@ CREATE TABLE `me_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(64) NOT NULL DEFAULT '',
   `password` varchar(15) NOT NULL DEFAULT '',
-  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `session_id` varchar(16) DEFAULT NULL,
+  `session_expire_time` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `rtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ctime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;

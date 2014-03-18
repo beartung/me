@@ -1,0 +1,19 @@
+<%inherit file="/base.html" />
+<%def name="title()">Tags</%def>
+<div class="container">
+    <div class="row-fluid">
+        <br>
+        <div class="span12">
+        <br>
+        <h2>全部标签 @_@</h2>
+        <hr>
+        <p>
+        %for t in all_tags:
+        <a href="${t.path}" class="btn card-tag">${t.name}(${t.count})</a>
+        %endfor
+        </p>
+        </div>
+        <br>
+        <br>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+<%inherit file="/base.html" />
+<%namespace name="utils" file="/utils.html" />
+<%!
+from config import DEVELOP_MODE, LOGO
+from webapp.models.consts import EMOTICONS
+%>
+<%def name="title()">Thread</%def>
+<div class="container">
+	<div class="row-fluid">
+		<div class="span8">
+			<div class="media">
+                <form method="post" action="${group.path}new_thread" enctype="multipart/form-data">
+                    <legend>在<a href="${group.path}">${group.name}</a>发新贴</legend>
+					%if error:
+					<p class="text-error">来个标题，并说点什么吧~</p>
+					%endif
+					<div class="clearfix">
+                        <input type="text" name="title" class="input-xxlarge" value="${thread_title}" placeholder="标题">
+
+                        <textarea id="update-text" class="me-comm-textarea" rows="8" name="update_text" placeholder="这是一个朴素的发布框">${text}</textarea>
+						<input id="update-file" class="pull-right" type="file" name="update_file" title="支持jpg, png, gif, mp3,文件不能大于5M"/>
+                        <p id="update-emoticon" class="hide">
+                        %for e in EMOTICONS:
+                        <a class="btn" onclick="add_emoticon('#update-text', '${e}')">${e}</a>
+                        %endfor
+                        </p>
+						<button type="submit" class="btn btn-primary">来一发</button>
+                        <a onclick="$('#update-emoticon').show()"><i class="icon-github-alt"></i></a>
+					</div>
+				</form>
+				<hr>
+			</div>
+		</div>
+	</div>
+</div>

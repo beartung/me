@@ -1,0 +1,72 @@
+/* Resizable
+----------------------------------*/
+.ui-resizable { position: relative;}
+.ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
+.ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0px; }
+.ui-resizable-s { cursor: s-resize; height: 7px; width: 100%; bottom: -5px; left: 0px; }
+.ui-resizable-e { cursor: e-resize; width: 7px; right: -5px; top: 0px; height: 100%; }
+.ui-resizable-w { cursor: w-resize; width: 7px; left: -5px; top: 0px; height: 100%; }
+.ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+.ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
+.ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
+.ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
+
+.photoTag-taglist li{
+	margin-left:10px;
+	list-style: none;
+	display: inline-block;
+}
+#tempNewTagForm{
+	background-color: #fff; 
+	padding: 5px 15px;
+	overflow:hidden;
+	position: absolute;
+	-webkit-border-radius: 3px;
+	-webkit-box-shadow: 0 0 5px rgba(0, 0, 0, .75);
+}
+.photoTag-wrap a{
+	display: block;
+}
+
+.photoTag-tag{
+	border: 3px solid rgba(255, 255, 255, .9);
+	opacity: 0.8;
+	-webkit-border-radius: 3px;
+	-webkit-box-shadow: 0 0 5px rgba(0, 0, 0, .75), 0 0 4px rgba(0, 0, 0, .5) inset;
+}
+.photoTag-tag .photoTag-delete {
+	width:18px; 
+	height:18px;
+	line-height: 18px;
+	display:block; 
+	z-index:3200; 
+	position:absolute; 
+	top:-12px; 
+	right:-14px; 
+	cursor:pointer;
+	background: #000;
+	color: #fff;
+	border: 3px solid #fff;
+	-webkit-border-radius: 18px;
+}
+#tempNewTagForm input{
+	float: left;
+	margin-right: 5px;
+}
+#tempNewTagForm label{
+	width: auto;
+	float: left;
+}
+.innerTag{
+	background-color: rgba(255,255,255,0.9);
+	color: #333;
+	padding: 3px;
+	height: 14px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	text-align: center;
+	font-size: 12px;
+}

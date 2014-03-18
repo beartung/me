@@ -1,0 +1,56 @@
+<%inherit file="/base.html" />
+<%! 
+from webapp.models.consts import Cate
+from webapp.models.event import Event
+%>
+<%def name="title()">Events</%def>
+<div class="container">
+<div class="span8">
+    <h2>豆瓣事件<sub>（<a href="/event/">创建新事件</a>）</sub></h2>
+    <hr>
+    %for event in events:
+    <div class="event-item">
+    <a href="${event.path}" class="pull-left" style="margin-right:10px;"><img src="${event.dynamic_cover(332, 110)}"></a>
+    <div class="event-desc">
+    <h4><a href="${event.path}">${event.name}</a></h4>
+    <p><i class="icon-eye-open"></i> <a href="${event.owner_card.url}">${event.owner.name}</a></p>
+    <p class="muted">${event.photo_num}张照片 · ${str(event.online_date)[:10]}</p>
+    </div>
+    %for p in event.photos[:4]:
+    <a href="${p.path}"><img src="${p.dynamic_url(187,187)}"></a>
+    %endfor
+    </div>
+    %endfor
+</div>
+</div>
+
+<%def name="event_item(event)">
+<div class="span4">
+    <a href="${event.path}" class="pull-left" style="margin-right:5px;"><img src="${event.dynamic_cover(50, 50)}"></a>
+	<h5><a href="${event.path}">${event.name}</a></h5>
+    <p class="muted">${str(event.online_date)[:10]}</p>
+</div>
+</%def>
+
+<%def name="photo_thumb(b)">
+<div class="card-thumb"> 
+    <div class="card-img-wrapper">
+        <a href="${b.path}">
+            <img src="${b.dynamic_url(480, 480)}">
+        </a>
+    </div>
+    <div class="card-info-wrapper">
+        <span class="card-small-score pull-right">
+##        <i class="icon-heart-empty"></i> ${b.like_num}
+##        <i class="icon-comment-alt"></i> ${b.comment_num}
+			%if b.comment_num > 0:
+			${b.comment_num}回应
+			%endif
+        </span>
+        <a href="${b.author_card.path}">
+            <nobr><img class="avatar-small" src="${b.author.picture(default=True)}">
+            ${b.author.name}</nobr>
+        </a>
+    </div>
+</div>
+</%def>

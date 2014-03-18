@@ -1,0 +1,30 @@
+<%!
+from config import SITE, JUG_HOST
+%>
+<%inherit file="/base.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%def name="title()">Topic</%def>
+<div class="container">
+    <h2>话题：#${topic.name}#</h2>
+    <hr>
+    <ul id="blog_list" class="unstyled">
+    %for b in topic.blogs:
+    ${blog_utils.blog_ui(b)}
+    %endfor
+    </ul>
+    <script>
+    var jug = new Juggernaut({'host':'${JUG_HOST}', 'port':4015});
+    jug.subscribe('me-topic-${topic.id}', function(data) {
+        if (data.inner_html){
+            $('#blog-line-' + data.blog_id).html(data.inner_html);
+        }else{
+            $('#blog_list').prepend(data.html);
+            $('#blog-line-' + data.blog_id);
+        }
+    });
+    </script>
+</div>
+
+<%def name="head_script()">
+    <script src="/static/js/juggernaut/application.js" type="text/javascript"></script>
+</%def>

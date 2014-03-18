@@ -1,0 +1,35 @@
+@charset "UTF-8";
+
+
+.icon-android:before { content: '\26'; } /* '&amp;' */
+.icon-reddit:before { content: '\3e'; } /* '&gt;' */
+.icon-plancast:before { content: '\50'; } /* 'P' */
+.icon-dropbox:before { content: '\64'; } /* 'd' */
+.icon-umbrella:before { content: '\2602'; } /* '☂' */
+.icon-music:before { content: '\e073'; } /* '' */
+.icon-male:before { content: '\e07b'; } /* '' */
+.icon-female:before { content: '\e098'; } /* '' */
+.icon-chart-pie:before { content: '\e751'; } /* '' */
+.icon-brush:before { content: '\e79a'; } /* '' */
+.icon-moon-inv:before { content: '\e7a0'; } /* '' */
+.icon-gauge:before { content: '\e7a2'; } /* '' */
+.icon-bicycle:before { content: '\e80a'; } /* '' */
+.icon-fire-station:before { content: '\e817'; } /* '' */
+.icon-garden:before { content: '\e81a'; } /* '' */
+.icon-giraffe:before { content: '\e81b'; } /* '' */
+.icon-harbor:before { content: '\e81f'; } /* '' */
+.icon-minefield:before { content: '\e826'; } /* '' */
+.icon-police:before { content: '\e82b'; } /* '' */
+.icon-religious-jewish:before { content: '\e831'; } /* '' */
+.icon-soccer:before { content: '\e837'; } /* '' */
+.icon-town-hall:before { content: '\e83c'; } /* '' */
+.icon-qq:before { content: '\f32a'; } /* '' */
+.icon-instagram:before { content: '\f32d'; } /* '' */
+.icon-evernote:before { content: '\f333'; } /* '' */
+.icon-skype:before { content: '\f339'; } /* '' */
+.icon-sina-weibo:before { content: '\f33f'; } /* '' */
+.icon-mic:before { content: '🎤'; } /* '\1f3a4' */
+.icon-headphones:before { content: '🎧'; } /* '\1f3a7' */
+.icon-volume-off:before { content: '🔇'; } /* '\1f507' */
+.icon-volume-up:before { content: '🔊'; } /* '\1f50a' */
+.icon-rocket:before { content: '🚀'; } /* '\1f680' */

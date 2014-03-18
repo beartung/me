@@ -1,0 +1,234 @@
+<%inherit file="/base.html" />
+<%!
+from webapp.models.consts import Cate
+from webapp.models.consts import EMOTICONS
+from webapp.models.event import Event
+%>
+
+<%def name="title()">Photo</%def>
+<div class="container">
+<h2><a href="${event.path}">${event.name}</a></h2>
+<div class="row-fluid">
+	<div class="span8">
+	    <center>
+            <p>
+	        <span class="pull-left">第${index + 1}张/共${total}张</span>
+	        <a class="pull-right" href="${event.path}">返回${event.name}</a>
+	        <a href="/event/photo/${prev_id}/">上一张</a> / <a href="/event/photo/${next_id}/">下一张</a>
+            </p>
+	        <hr>
+            <img id="event-photo" class="photoTag" data-user-id="${photo.author_id}" data-image-id="${photo.id}"
+                data-album-id="${photo.event_id}" src="${photo.url(Cate.LARGE)}"
+                data-image-link="/event/photo/${next_id}/"
+                >
+            </a>
+	        <br/><br/>
+		    <a href="${photo.url(Cate.ORIGIN)}"  class="btn" target="_blank">下载原图</a>
+		    <input id="photo_plus_${photo.id}" value=" ╮(╯▽╰)╭  这张照片真棒，+ 1" type="hidden">
+            %if req.user:
+                %if photo.is_liked(req.user.id):
+                <input id="photo-plus-button" type="button" class="btn disabled" value="已+ 1">
+                %else:
+                <input id="photo-plus-button" type="button" class="btn btn-primary" value="  + 1  "onclick="return like_photo('${photo.id}');">
+                %endif
+                <a id="externalLink" href="#" class="addTag btn btn-warning">圈厂工</a>
+                %if photo.can_remove(req.user.id):
+				<a class="pull-right muted card-tooltip" href="${photo.path}remove" onclick="return confirm('真的要删除这张照片吗？');" title="删除照片"><i class="icon-remove"></i></a>
+                %endif
+            %endif
+	    </center>
+	    ${photo_comments(photo)}
+    </div>
+    <div class="span4">
+	    <div class="well">
+		    <a href="${photo.author_card.path}">
+		        <img src="${photo.author.picture(default=True)}">
+		    </a>
+		    <a href="${photo.author_card.path}" style="padding-left:8px">${photo.author.name}</a>
+            %if photo.can_edit(req.user.id):
+            <div>
+            <br>
+            <form action="${photo.path}rotate" method="post">
+                <input name="rotate_left" type="submit" class="btn btn-info" value="左转">
+                <input name="rotate_right" type="submit" class="btn btn-info" value="右转">
+            </form>
+            </div>
+            %endif
+		</div>
+        <hr>
+        <h3>对这张照片+ 1的同学们</h3>
+        <div id="photo_likers_div">
+        ${photo_likers(photo)}
+        </div>
+    </div>
+</div>
+
+<%def name="photo_likers(photo)">
+%if photo.like_num > 0:
+<div class="avatar-list">
+    %for u in photo.likers:
+    <a href="/card/${u.uid}/" title="${u.name}">
+        <img class="avatar" src="${u.picture(default=True)}">
+    </a>
+    %endfor
+</div>
+%else:
+<p>还没有人+ 1呢！</p>
+%endif
+</%def>
+
+<%def name="photo_comment(comment, link=False)">
+<li id="comment_${comment.id}" class="media">
+<a class="pull-left" href="${comment.author_card.path}">
+    <img class="media-object" src="${comment.author.picture(default=True)}">
+</a>
+<div class="media-body">
+    <h4 class="media-heading">
+        <a href="${comment.author_card.path}">${comment.author.name}</a> <small class="muted">
+            %if link:
+            <a href="${comment.photo.path}">${comment.rtime}</a>
+            %else:
+            ${comment.rtime}
+            %endif
+        </small>
+        %if req.user and req.user.id == comment.author_id:
+        <a class="muted pull-right card-tooltip" href="#"
+            onclick="return uncomment_photo('${comment.photo_id}','${comment.id}')"
+            title="删除回复"><i class="icon-remove"></i></a>
+        %endif
+    </h4>
+    <div class="media">
+        ${comment.html|n}
+    </div>
+</div>
+</li>
+</%def>
+
+<%def name="photo_comments(photo)">
+<div id="photo_comments_div">
+    <a id="photo_comments"></a>
+    <hr>
+    %if photo.comment_num > 0:
+    <ul class="media-list">
+        %for comment in photo.comments:
+        ${photo_comment(comment)}
+        %endfor
+    </ul>
+    %else:
+    <p class="muted">现在还没有留言  ╮(╯▽╰)╭  &nbsp;<i class="icon-comment-alt"></i> 来一发？</a>
+</p>
+%endif
+<form method="post" action="${photo.path}comment" class="me-comm">
+    <textarea id="input_comment_${photo.id}" class="span8 me-comm-textarea" rows="2" name="content" placeholder="随意吐槽 ：）"></textarea><br/>
+    <p id="emoticon" class="hide">
+    %for e in EMOTICONS:
+    <a class="btn" onclick="add_emoticon('#input_comment_${photo.id}', '${e}')">${e}</a>
+    %endfor
+    </p>
+    <input type="button" class="btn btn-primary btn-large" value="留言" onclick="return comment_photo('${photo.id}','input_comment_${photo.id}');">
+    <a class="btn btn-link" onclick="$('#emoticon').show()"><i class="icon-github-alt"></i></a>
+</form>
+</div>
+</%def>
+
+<%def name="head_script()">
+<link rel="stylesheet" href="/static/css/jquery-ui-1.8.17.custom.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="/static/css/qunit.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="/static/css/phototag.css" type="text/css" media="screen" />
+</%def>
+
+<%def name="body_script()">
+<script src="/static/js/jquery-ui.1.10.2.min.js" type="text/javascript"></script>
+<script src="/static/js/qunit.js" type="text/javascript"></script>
+<script src="/static/js/jquery.phototag.js" type="text/javascript"></script>
+<script>
+window.me_photoevent = false;
+$('.me-comm-textarea').bind('blur', function(){
+    window.me_photoevent = false;
+});
+$('.me-comm-textarea').bind('focus', function(){
+    window.me_photoevent = true;
+});
+$(document).bind("keyup", function(e){
+    switch(e.keyCode){
+        case 37:
+            if(window.me_photoevent){
+                return false;
+            }
+            %if prev_id > -1:
+            window.location.href = '/event/photo/${prev_id}/';
+            %endif
+            break;
+        case 39:
+            if(window.me_photoevent){
+                return false;
+            }
+            %if next_id > -1:
+            window.location.href = '/event/photo/${next_id}/';
+            %endif
+            break;
+    }
+});
+$(function(){
+    $('#event-photo').bind("load", function(){
+        $('.photoTag').photoTag({
+            requestTagsUrl: '/j/event/photo_tags',
+            deleteTagsUrl: '/j/event/remove_photo_tag',
+            addTagUrl: '/j/event/add_photo_tag',
+            parametersForNewTag: {
+                name: {
+                    parameterKey: 'name',
+                    isAutocomplete: true,
+                    autocompleteUrl: '/j/names',
+                    label: '输入名字或id:'
+                }
+            },
+            literals:{
+                communicationProblem: '请检查网络╭(╯^╰)╮',
+                saveTag: '确定',
+                cancelTag: '取消',
+                addNewTag: '圈人',
+                removeTag: 'x'
+            },
+            externalAddTagLinks: {
+                bind: true,
+                selector: ".addTag"
+            },
+            tag: {
+                tagIdParameter: 'tag-id',
+                defaultWidth: 100,
+                defaultHeight: 100,
+                isResizable: true,
+                minWidth: 50,
+                minHeight: 50,
+                maxWidth: 200,
+                maxHeight: 200,
+                cssClass: 'photoTag-tag',
+                idPrefix: 'photoTag-tag_',
+                showDeleteLinkOnTag: true,
+                deleteLinkCssClass: 'photoTag-delete',
+                deleteLinkIdPrefix: 'photoTag-delete_',
+                flashAfterCreation: true,
+                newTagFormWidth: 120,
+                newTagFormClass: 'photoTag-newTagForm'
+            }
+        });
+    });
+});
+
+function preload(arrayOfImages) {
+    $(arrayOfImages).each(function(){
+        $('<img/>')[0].src = this;
+        // Alternatively you could use:
+        // (new Image()).src = this;
+    });
+}
+
+// Usage:
+
+preload([
+    '/p/evp1-${next_id}-l.jpg',
+    '/p/evp1-${prev_id}-l.jpg'
+]);
+</script>
+</%def>

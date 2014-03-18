@@ -1,0 +1,14 @@
+<%inherit file="/base.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%namespace name="utils" file="/utils.html" />
+<%def name="title()">Blogs</%def>
+<div class="container">
+    <h2>${card.owner.name}的广播</h2>
+    <hr>
+    <ul class="unstyled">
+    %for b in blogs:
+    ${blog_utils.blog_ui(b)}
+    %endfor
+    </ul>
+    ${utils.pager(prefix, total, start, limit)}
+</div>

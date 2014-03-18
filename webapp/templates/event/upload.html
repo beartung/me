@@ -1,0 +1,134 @@
+<%!
+from config import DEVELOP_MODE
+from webapp.models.card import TAGS, SEXS, LOVES, MARRIAGES, ASTROS, ZODIACS, PROVINCE
+%>
+<%inherit file="/base.html" />
+
+<%def name="title()">Upload</%def>
+<div class="container">
+    <h2>给事件${event.name}上传照片</h2>
+
+    <div id="place-image-upload">
+    </div>
+
+    <form id="form-publish-photos" method="post" action="/event/${event.id}/upload">
+        <div class="images item">
+        </div>
+        <div class="item submit-item">
+            <input type="submit" class="btn btn-green" value="确定保存">
+        </div>
+    </form>
+</div>
+
+<%def name="head_script()">
+    <link href="/static/css/upload.css" type="text/css" rel="stylesheet">
+</%def>
+<%def name="body_script()">
+
+<script id="image_item_tmpl" type="text/template">
+    <div class="image-item" data-id="{{= ID}}">
+        <a class="delete-image" href="{{= DELETE_PHOTO_URL}}" title="删除该图片">X</a>
+        <input type='hidden' name="pid" value="{{= ID}}"/>
+        <div class="thumbnail">
+            <div class="image-thumb">
+                <img src="{{= thumb}}"/>
+            </div>
+        </div>
+        <div class="image-desc">
+            <textarea name="desc_{{= ID}}" placeholder="对这张照片说点什么吧...(512字以内)"></textarea>
+        </div>
+    </div>
+</script>
+<script id="image_dlg_tmpl" type="text/template">
+    <div id="image_upload">
+        <form id="upload-area" action="{{= UPLOAD_URL}}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="eid" value="{{= eid}}" />
+        {{if dnd}}
+            <div class="drag-drop">
+                <span class="text">
+                    将图片文件拖到这里<br/>
+                    或<br/>
+                    <label for="image_file" class="cabinet">
+                        <input id="image_file" class="file" accept="image/*" type="file" name="upload_file" multiple />
+                    </label>
+                </span>
+            </div>
+        {{else}}
+            <div>屌丝，换个高级的浏览器啊！</div>
+        {{/if}}
+        </form>
+        <div class="upload-tip">
+        {{if (!basic)}}
+            图片不超过5M，一次最多20张。按"<i>command</i>"能一次选择多张照片
+            <br/>
+        {{else}}
+            图片不超过5M<br/>
+            <span class="upload-alternative">现在可以使用批量上传了。使用<a class="upload-multi" href="#">批量上传</a></span>
+        {{/if}}
+        </div>
+        <div class="upload-info">
+            <div id="image-slots"></div>
+            <div class="footer">
+                <span class="total-num">共<span class="image-num">{{= 0}}</span>张<span class="num-warning">超过20张的部分，请另上传</span></span>
+            </div>
+        </div>
+    </div>
+</script>
+<script id="image_slot" type="text/template">
+    <div class="slot" data-id="{{= ID}}">
+        <span class="image-name">{{= name}}</span>
+        <span class="image-size"></span>
+    </div>
+</script>
+<script id="image_slot_loading" type="text/template">
+    <div class="slot image-loading" data-id="{{= ID}}">
+    {{if isBasic}}
+        <span class="image-name">{{= name}}</span>
+        <span class="basic-loading">上传中...</span>
+    {{else}}
+        <span class="image-name">{{= name}}</span>
+        <span class="image-size"></span>
+        <span class="percentage"></span>
+        <div class="progress"></div>
+    {{/if}}
+    </div>
+</script>
+<script id="image_slot_error" type="text/template">
+    <div class="slot error" data-id="{{= ID}}">
+    {{if isBasic}}
+        <span class="image-name">{{= name}}</span>
+        <span class="image-error">{{= msg}}
+    {{else}}
+        <span class="image-name">{{= name}}</span>
+        <span class="image-error">{{= msg}}
+        {{if retry}}
+            &nbsp;|&nbsp;<a href="#" class="image-retry">重试</a>
+        {{/if}}
+        </span>
+        <span class="image-size">{{= sizeText}}</span>
+    {{/if}}
+        <span class="image-delete"><a title="取消该图片" class="image-delete"><img src="/static/img/icon-recycle.png"/></a></span>
+    </div>
+</script>
+
+<script>
+Do.add('template', {path: '/static/js/lib/jquery.tmpl.js', type: 'js'});
+
+Do.add('modernizr.dnd', { path: '/static/js/lib/modernizr.dnd.js', type: 'js'})
+Do.add('iframe-post-form-css', {path: '/static/css/lib/iframe-post-form.css', type: 'css'});
+Do.add('iframe-post-form', {path: '/static/js/lib/iframe-post-form.current.js', type: 'js', requires: ['iframe-post-form-css']});
+Do.add('uploadify', {path: '/static/js/lib/jquery.uploadify.js', type:'js', requires: ['/static/js/swfobject.js']});
+Do.add('image-upload', {path: '/static/js/photo/image_upload.js', type: 'js'});
+
+var UPLOAD_URL = '/j/event/upload',
+    DELETE_PHOTO_URL = '/j/event/remove_photo';
+
+Do('template', 'modernizr.dnd', 'uploadify', 'image-upload', function() {
+    var imageUpload = ImageUpload({
+        eid: '${event.id}',
+        upload_photo_url: UPLOAD_URL,
+        container: '#place-image-upload'
+    });
+});
+</script>
+</%def>

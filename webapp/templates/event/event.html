@@ -1,0 +1,96 @@
+<%inherit file="/base.html" />
+<%! 
+from webapp.models.consts import Cate
+from webapp.models.event import Event
+%>
+<%namespace name="utils" file="/utils.html" />
+<%namespace name="photo_utils" file="/event/photo.html" />
+
+<%def name="title()">Event</%def>
+<div class="container">
+	<h2>${event.name}</h2>
+	<p class="muted">${event.photo_num}张照片 · ${str(event.online_date)[:10]} 
+	<a class="btn btn-success" href="${event.path}upload"><i class="icon-upload-alt"></i> 上传照片</a>
+	%if req.user and event.can_edit(req.user.id):
+	<a class="btn btn-warning" href="${event.path}edit"><i class="icon-pencil"></i> 编辑事件</a>
+	%endif
+	</p>
+	<hr>
+    <div class="row-fluid">
+	    <div class="span8">
+	    	${event_photos(event)}
+	    </div>
+	    <div class="span4">
+	    	<div class="well">
+	    	%if event.photo_id:
+	        <img src="${event.cover()}">
+	        %endif
+	        %if event.content:
+	        <p>${event.html_content|n}</p>
+	        %else:
+	        还没有写描述
+	        %endif
+	    	</div>
+	        %if event.author_cards:
+	        <h3>上传过照片的同学们</h3>
+	        <div class="avatar-list clearfix">
+	        %for card in event.author_cards:
+	        <a href="${card.path}">
+	            <img src="${card.owner.picture(default=True)}">
+	        </a>
+	        %endfor
+	        </div>
+	        %endif
+            %if event.latest_comments():
+	        <h3>最新回复</h3>
+            <ul class="media-list">
+                %for comment in event.latest_comments():
+                ${photo_utils.photo_comment(comment, True)}
+                %endfor
+            </ul>
+            %endif
+	    </div>
+    </div>  
+</div>
+
+<%def name="event_photos(event)">
+%if not event.photos:
+<p>现在还没有照片，<a class="btn btn-primary" href="${event.path}upload">上传照片</a></p>
+%else:
+<div class="event-photos">
+    %for p in event.photos[start:start+limit]:
+	<div class="card-thumb"> 
+	    <div class="card-img-wrapper">
+	        <a href="${p.path}">
+	            <img class="lazy" data-original="${p.dynamic_url(480, 480)}"  src="/static/img/1px.gif">
+	        </a>
+	    </div>
+	    <div class="card-info-wrapper">
+	        <span class="card-small-score pull-right">
+		        %if p.comment_num > 0:
+					${p.comment_num}回应
+				%endif
+	        </span>
+	        <a href="${p.author_card.path}">
+	            <nobr><img class="avatar-small" src="${p.author.picture(default=True)}">
+	            ${p.author.name}</nobr>
+	        </a>
+	    </div>
+    </div>
+
+    %endfor
+	${utils.pager(prefix, total, start, limit)}
+</div>
+%endif
+</%def>
+
+<%def name="body_script()">
+<script src="/static/js/jquery.lazyload.min.js" type="text/javascript"></script>
+<script>
+$(function() {          
+     $("img.lazy").lazyload({
+         threshold : 200
+     });
+ });
+</script>
+</%def>

@@ -1,0 +1,11 @@
+<%inherit file="/base.html" />
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%def name="title()">Blog</%def>
+    ${blog_utils.blog_ui(blog, single=True)}
+<%def name="body_script()">
+<script>
+$(function () {
+    read_notify('${blog.id}');
+})
+</script>
+</%def>

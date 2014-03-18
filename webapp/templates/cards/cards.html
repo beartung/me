@@ -1,0 +1,35 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+<%namespace name="utils" file="/utils.html" />
+
+<%def name="title()">Cards</%def>
+<div class="container">
+    <ul class="nav nav-pills">
+        %if cate != 'photo':
+        <li class="active">
+        %else:
+        <li>
+        %endif
+        <a href="/cards">全部卡片</a>
+        </li>
+        %if cate == 'photo':
+        <li class="active">
+        %else:
+        <li>
+        %endif
+        <a href="/cards?cate=photo">只看真相</a>
+        </li>
+    </ul>
+    <hr>
+    <div class="columns">
+        %if cards:
+            %for card in cards:
+	            ${card_ui.card_small(card)}
+            %endfor
+        %endif
+    </div>
+##    <nav id="page-nav">
+##    <a href="${'%sstart=%s&limit=%s' % (prefix, start, limit)}"></a>
+##    </nav>
+    ${utils.pager(prefix, total, start, limit)}
+</div>

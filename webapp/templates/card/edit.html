@@ -1,0 +1,383 @@
+<%inherit file="/base.html" />
+<%!
+from config import DEVELOP_MODE
+from webapp.models.card import TAGS, SEXS, LOVES, MARRIAGES, ASTROS, ZODIACS, PROVINCE
+%>
+
+<%def name="title()">Edit</%def>
+<div class="container">
+    %if req.user:
+        ${make_card(req.user, card)}
+    %endif
+</div>
+
+<%def name="make_card(u, card)">
+<%
+p = {}
+if not DEVELOP_MODE:
+    p = u.profile() or {}
+city = p.get('city', '城市')
+%>
+    <h2>编辑卡片</h2>
+    <p class="text-info">基本信息比如豆瓣id，豆瓣邮箱，skype是公开的，匿名用户可见，可搜索。因为只部署在内网的DAE上，所以没有泄漏到外部的风险。<br>真相信息比如姓名，手机号等是半公开的，登录用户并且也是填写过真相信息的同学才可见，不可搜索。</p>
+    <p class="muted">
+        <i class="icon-asterisk"></i>表示仅真相用户可见，填好自己的真相信息才能看到别人的真相信息哦〜<br>
+        <i class="icon-asterisk" style="color:#C2564A"></i>表示必备信息，如果有误请联系 zhangnan@douban.com
+    </p>
+    <h3>
+    	<a href="${u.url()}" target="_blank">
+    	<img class="avatar" src="${u.picture(default=True)}">
+        ${u.name}<small class="muted">@${u.uid}</small></a>
+    </h3>
+<form id="fileupload" class="form-horizontal" enctype="multipart/form-data" method="post" action="/make">
+<legend>基本信息（数据来自内网系统）</legend>
+<div class="control-group">
+	<label class="control-label" for="inputEmail">豆瓣邮箱</label>
+	<div class="controls">
+        %if card.email:
+		<input type="text" id="inputEmail" name="email" value="${card.email or email}" placeholder="豆瓣邮箱" disabled>
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+        %else:
+		<input type="text" id="inputEmail" name="email" value="${email}" placeholder="豆瓣邮箱，填好后不能修改">
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i> 填好后不能修改</span>
+        %endif
+        %if error == "invalid_email":
+        <small style="color:#F00">请输入合法豆瓣邮箱</small>
+        %endif
+        <p class="help-block">如果误填写请联系bear@douban.com</p>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputName">真实姓名（仅自己可见）</label>
+	<div class="controls">
+        %if card.name:
+		<input type="text" id="inputName" name="name" value="${card.name}" disabled>
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+        %else:
+		<input type="text" id="inputName" name="name" value="${name}" placeholder="真实姓名，填好后不能修改">
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i> 填好后不能修改</span>
+        %endif
+        %if error == "invalid_name":
+        <small style="color:#F00">请输入真实姓名</small>
+        %endif
+        <p class="help-block">如果误填写请联系bear@douban.com</p>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputSkype">Skype</label>
+	<div class="controls">
+		<input type="text" id="inputSkype" name="skype" value="${card.skype or skype}" placeholder="skype">
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+        %if error == "invalid_skype":
+        <small style="color:#F00">请输入合法skype</small>
+        %endif
+	</div>
+</div>
+<div class="control-group hide">
+	<label class="control-label" for="inputPhone">手机号</label>
+	<div class="controls">
+		<input type="text" id="inputPhone" name="phone" value="${card.phone or phone}" placeholder="手机号" disabled>
+		<span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="join_time">入职时间</label>
+	<div class="controls">
+		<div class="input-append">
+        <input type="text" id="join_time" name="join_time" class="datepicker" value="${str(card.join_time)[:10] or join_time}" placeholder="入职时间">
+		<span class="add-on"><i class="icon-calendar"></i></span>
+		</div>
+        <span class="help-inline"><i class="icon-asterisk" style="color:#C2564A"></i></span>
+    </div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="reg_time">帐号注册时间</label>
+	<div class="controls">
+		<input id="reg_time" type="text" placeholder="${str(u.reg_time)[:10]}" disabled>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="city">城市</label>
+	<div class="controls">
+		<input id="city" type="text" placeholder="${city}" disabled>
+	</div>
+</div>
+<legend>真实资料</legend>
+<div class="control-group">
+	<label class="control-label" for="inputNamealias">真相</label>
+	<div class="controls">
+		%if card.photo:
+            <img src="${card.dynamic_photo(160, 160)}">
+        %else:
+        	<img src="http://img3.douban.com/icon/user_large.jpg">
+        %endif
+        <br>
+		<input type="file" name="upload_file"/>
+		<p class="text-info">
+			%if error == "too_large":
+        <span class="text-error">
+        %else:
+        <span>
+        %endif
+        图片最大不超过5M</span>
+		</p>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputNamealias">花名/别名/外号</label>
+	<div class="controls">
+		<input type="text" id="inputNamealias" name="alias" value="${card.alias or alias}" placeholder="花名/别名/外号">
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+
+<%
+p_sex = card.profile.sex or sex
+p_love = card.profile.love or love
+p_marriage = card.profile.marriage or marriage
+p_zodiac = card.profile.zodiac or zodiac
+p_astro = card.profile.astro or astro 
+p_province = card.profile.province or province
+%>
+<hr>
+<div class="control-group">
+	<label class="control-label" for="inputSex">性别</label>
+	<div class="controls">
+		<select name="sex">
+            %for k, v in SEXS:
+            %if k == p_sex:
+            <option selected="selected" value="${k}">${v}</option>
+            %else:
+            <option value="${k}">${v}</option>
+            %endif
+            %endfor
+        </select>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputLove">性取向</label>
+	<div class="controls">
+        <select name="love" id="inputLove">
+            %for k, v in LOVES:
+            %if k == p_love:
+            <option selected="selected" value="${k}">${v}</option>
+            %else:
+            <option value="${k}">${v}</option>
+            %endif
+            %endfor
+        </select>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputMarriage">感情状态</label>
+	<div class="controls">
+		<select name="marriage" id="inputMarriage">
+            %for k, v in MARRIAGES:
+            %if k == p_marriage:
+            <option selected="selected" value="${k}">${v}</option>
+            %else:
+            <option value="${k}">${v}</option>
+            %endif
+            %endfor
+        </select>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="birthday">出生日期</label>
+	<div class="controls">
+		<div class="input-append">
+			<input id="birthday" type="text" name="birthday" value="${str(card.profile.birthday)[:10] or birthday}" placeholder="生日">
+			<span class="add-on"><i class="icon-calendar"></i></span>
+		</div>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="zodiac">属相</label>
+	<div class="controls">
+        <select id="zodiac" name="zodiac">
+            %for k, v in ZODIACS:
+            %if k == p_zodiac:
+            <option selected="selected" value="${k}">${v}</option>
+            %else:
+            <option value="${k}">${v}</option>
+            %endif
+            %endfor
+        </select>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="astro">星座</label>
+	<div class="controls">
+        <select id="astro" name="astro">
+            %for k, v in ASTROS:
+            %if k == p_astro:
+            <option selected="selected" value="${k}">${v}</option>
+            %else:
+            <option value="${k}">${v}</option>
+            %endif
+            %endfor
+        </select>
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="province">家乡</label>
+	<div class="controls">
+		<select name="province" class="input-small">
+        %for p in PROVINCE:
+        %if p == p_province:
+        <option selected="selected">
+        %else:
+        <option>
+        %endif
+        ${p}</option>
+        %endfor
+        </select>
+        <input type="text" id="hometown" class="input-small" name="hometown" value="${card.profile.hometown or hometown}" placeholder="城市">
+		<span class="help-inline"><i class="icon-asterisk"></i></span>
+##		<p class="muted">
+##		常用城市：
+##        %for t in citys:
+##        <a href="#" class="label" onclick="return set_city('${t}');">${t}</a>
+##        %endfor
+##        </p>
+	</div>
+</div>
+<hr>
+<div class="control-group">
+	<label class="control-label" for="resume">过往公司/学校</label>
+	<div class="controls">
+        <input type="text" name="resume" id="resume" value="${card.profile.resume or resume}" placeholder="最近混过的公司">
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="intro">个人简介</label>
+	<div class="controls">
+        <textarea name="intro" class="input-xlarge" id="intro" rows="5" placeholder="自我介绍，200字以内">${card.profile.intro or intro}</textarea>
+	</div>
+</div>
+<legend>社交名片</legend>
+<div class="control-group">
+	<label class="control-label" for="inputWeibo">http://weibo.com/</label>
+	<div class="controls">
+		<input type="text" id="inputWeibo" name="weibo" value="${card.profile.weibo or weibo}" placeholder="weibo">
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputInstagram">http://instagram.com/</label>
+	<div class="controls">
+		<input type="text" id="inputInstagram" name="instagram" value="${card.profile.instagram or instagram}" placeholder="Instagram">
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputGithub">http://github.com/</label>
+	<div class="controls">
+		<input type="text" id="inputGithub" name="github" value="${card.profile.github or github}" placeholder="github">
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputCode">http://code.douban.com/people/</label>
+	<div class="controls">
+		<input type="text" id="inputCode" name="code" value="${card.profile.code or code}" placeholder="Code">
+	</div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="inputBlog">Blog:</label>
+	<div class="controls">
+		<input type="text" id="inputBlog" name="blog" value="${card.profile.blog or blog}" placeholder="blog">
+	</div>
+</div>
+<legend>我的标签</legend>
+<div class="control-group">
+	<label class="control-label" for="inputTags">标签</label>
+	<div class="controls">
+	    <textarea id="tags" class="input-xxlarge" rows="2" name="tags" placeholder="标签以空格分隔，或者点击左边的按钮添加">${' '.join(card.tags)}</textarea>
+	    <p class="text-info">给自己打上贴切的标签吧!你也可以直接点击下方常用标签来加入。</p>
+            %for t in TAGS:
+            <a href="#" class="label label-info" onclick="return add_self_tag('${t}');">${t}</a>
+            %endfor
+        </p>
+	</div>
+</div>
+<hr>
+<div class="control-group">
+	<div class="controls">
+		<button type="submit" class="btn btn-primary btn-large">保存</button>
+	    <a type="button" class="btn btn-large pull-right" href="/mine">取消</a>
+	</div>
+</div>
+</form>
+</%def>
+
+<%def name="head_script()">
+<link href="/static/css/datepicker.css" type="text/css" rel="stylesheet">
+<script>
+    function add_self_tag(t){
+        $("#tags")[0].value = $("#tags")[0].value + ' ' + t;
+        return false;
+    };
+    function set_city(t){
+        $("#hometown")[0].value = t;
+        return false;
+    };
+    function get_zodiac(year){
+        for (i = 1; i <= 12; i++){
+            v = 1900 + i - 1;
+            if (year % v % 12 == 0){
+                return i;
+            }
+        }
+        return 0;
+    };
+    function get_astro(month, day){
+        if (month == 1 && day >=20 || month == 2 && day <=18) { return 11;}
+        if (month == 2 && day >=19 || month == 3 && day <=20) { return 12;}
+        if (month == 3 && day >=21 || month == 4 && day <=19) { return 1;}
+        if (month == 4 && day >=20 || month == 5 && day <=20) { return 2;}
+        if (month == 5 && day >=21 || month == 6 && day <=21) { return 3;}
+        if (month == 6 && day >=22 || month == 7 && day <=22) { return 4}
+        if (month == 7 && day >=23 || month == 8 && day <=22) { return 5}
+        if (month == 8 && day >=23 || month == 9 && day <=22) { return 6}
+        if (month == 9 && day >=23 || month == 10 && day <=22) { return 7;}
+        if (month == 10 && day >=23 || month == 11 && day <=21) { return 8;}
+        if (month == 11 && day >=22 || month == 12 && day <=21) { return 9;}
+        if (month == 12 && day >=22 || month == 1 && day <=19) { return 10;}
+    };
+</script>
+</%def>
+
+<%def name="body_script()">
+<script src="/static/js/bootstrap-datepicker.js" type="text/javascript"></script>
+<script src="/static/js/bootstrap-datepicker.zh-CN.js" type="text/javascript" charset="UTF-8"></script>
+<script>
+$(function () {
+    $('#birthday').datepicker({
+        language: 'zh-CN',
+        startDate: '1970-01-01',
+        endDate: '2000-01-01',
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+    }).on('changeDate', function(ev){
+        v = this.value;
+        vv = v.split('-');
+        y = parseInt(vv[0]);
+        m = parseInt(vv[1]);
+        d = parseInt(vv[2]);
+        $('#zodiac')[0].value = get_zodiac(y);
+        $('#astro')[0].value = get_astro(m, d);
+    });
+
+    $('#join_time').datepicker({
+        language: 'zh-CN',
+        startDate: '2005-03-06',
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+    });
+});
+</script>
+</%def>

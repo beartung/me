@@ -1,0 +1,156 @@
+<%inherit file="/base.html" />
+<%namespace name="card_ui" file="/card/utils.html" />
+<%!
+from webapp.models.card import ZODIACS, ASTROS, PROVINCE, Cate, Card
+from webapp.models.utils import escape_path
+%>
+
+<%def name="title()">Dig</%def>
+<div class="row-fluid">
+    <div class="span8">
+        <h2>花名榜</h2>
+        <p class="text-success">花名册已经有卡片${basic_result['n_card']}张，有基本信息的${basic_result['n_basic_card']}张，有真人照片的${basic_result['n_photo_card']}张 。大家加油！</p>
+        <section>
+        <h3>魅力值排名</h3>
+        <div class="row-fluid">
+            %for d in score_cards[:12]:
+            ${card_ui.card_chart(d)}
+            %endfor
+        </div>
+        </section>
+        <section>
+        <h3>萌排名</h3>
+        <div class="row-fluid">
+            %for d in Card.gets_by_tag('萌')[:12]:
+            ${card_ui.card_chart(d)}
+            %endfor
+        </div>
+        <section>
+        <h3>妹子排名</h3>
+        <div class="row-fluid">
+            %for d in Card.gets_by_tag('妹子')[:12]:
+            ${card_ui.card_chart(d)}
+            %endfor
+        </div>
+        </section>
+        <section>
+        <h3>单身排名</h3>
+        <div class="row-fluid">
+            %for d in Card.gets_by_tag('单身')[:12]:
+            ${card_ui.card_chart(d)}
+            %endfor
+        </div>
+        </section>
+        <%
+        fr = gossip_result.get('first_register', None)
+        fe = gossip_result.get('first_employee', None)
+        lc = gossip_result.get('likest_card', None)
+        qc = gossip_result.get('question_card', None)
+        cc = gossip_result.get('commentest_card', None)
+        tc = gossip_result.get('taggest_card', None)
+        bc = gossip_result.get('badagest_card', None)
+        ht = gossip_result.get('hotest_tags', [])
+        rpc, rpcn = gossip_result.get('most_request_photo_card', (None,0))
+        rpcc, rpccn = gossip_result.get('most_request_change_photo_card', (None,0))
+        %>
+        <section>
+	        <h3>花名册八卦</h3>
+	        <ul>
+	            %if fr:
+	            <li>
+	            	第一个注册：${tiny_card(fr)}
+	            </li>
+	            %endif
+	            %if fe:
+	            <li>
+	            	第一个入职：${tiny_card(fe)}
+	            	<span class="muted">${str(fe.join_time)[:10]}</span>
+	            </li>
+	            %endif
+	            %if lc:
+	            <li>
+	            	收藏数最多：${tiny_card(lc)}
+	            	<span class="muted"><i class="icon-heart"></i> ${lc.like_num}</span>
+	            </li>
+	            %endif
+	            %if qc:
+	            <li>
+		            提问数最多：${tiny_card(qc)}
+		            <span class="muted"><i class="icon-question-sign"></i> ${len(qc.questions)}个问题
+	            </li>
+	            %endif##	            %if cc:
+##	            <li>留言数最多：${tiny_card(cc)}
+##	            <span class="muted"><i class="icon-comment-alt"></i> ${cc.comment_num}</span>
+##	            </li>
+##	            %endif
+	            %if ht:
+	            <li>
+	            	标签数最多：${tiny_card(tc)}
+	            </li>
+	            %endif
+	            %if bc:
+	            <li>徽章数最多：${tiny_card(bc)}
+	            	<span class="muted">
+	            	<i class="icon-trophy"></i>
+		            %for b in bc.badages:
+		            <a href="/badage/${b.name}" class="me-badage-link" title="${b.name}(${b.intro})"><i class="${b.icon} me-badage"></i></a>
+		            %endfor
+	            	</span>
+	            </li>
+	            %endif
+	            %if rpc and rpcn:
+	            <li>
+	            	被最多人求真相的卡片是：${tiny_card(rpc)}
+	            	<span class="muted"><i class="icon-picture"></i> ${rpcn}</span>
+	            </li>
+	            %endif
+	            %if rpcc and rpccn:
+	            <li>
+	            	被最多人要求换真相的卡片是：${tiny_card(rpcc)}
+	            	<span class="muted"><i class="icon-picture"></i> ${rpccn}</span>
+	            </li>
+	            %endif
+	            <li>最热门标签：
+	            %for t, tc in ht:
+	            <a class="label card-tag" href="/tag/${escape_path(t)}">${t}(${tc})</a>
+	            %endfor
+	            </li>
+	        </ul>
+        </section>
+    </div>
+    <div class="span4">
+        <h3>热门标签<sub><a href="/tags">（全部）</a></h3>
+        <hr>
+        <p>
+        %for t in hot_tags:
+        <a href="${t.path}" class="btn card-tag">${t.name}(${t.count})</a>
+        %endfor
+        <br>
+        </p>
+        ${loc_list()}
+    </div>
+</div>
+<%def name="tiny_card(card)">
+<a href="${card.path}">
+    <img class="avatar-small" src="${card.owner.picture(default=True)}">
+    ${card.screen_name}
+</a>
+</%def>
+
+<%def name="loc_list()">
+<h3>省份</h3>
+<div>
+    %for t in PROVINCE[1:]:
+    <a class="btn card-tag" href="/province/${t}">${t}</a>
+    %endfor
+</div>
+<br>
+<h3>家乡城市</h3>
+<div>
+    %for t in hometowns:
+    <a class="btn card-tag" href="/hometown/${t}">${t}</a>
+    %endfor
+</div>
+</%def>
+
+

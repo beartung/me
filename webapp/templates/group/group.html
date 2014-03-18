@@ -1,0 +1,91 @@
+<%inherit file="/base.html" />
+<%! 
+from config import DEVELOP_MODE, SITE, LOGO
+from webapp.models.consts import Cate
+from webapp.models.group import Group
+%>
+<%def name="title()">Group</%def>
+<div class="container">
+	<div class="row-fluid">
+		<div class="span8">
+        <section>
+	    <h2>${group.name}</h2>
+        <p class="muted">${group.n_member}个${group.m_name} · ${group.n_thread}个话题
+        &nbsp;
+        %if req.user and group.is_joined(req.user.id):
+        <a class="btn btn-link pull-right" href="${group.path}quit"
+            onclick="return confirm('真的要退出吗？');">退出小组</a>
+        %else:
+        <a class="btn btn-info" href="${group.path}join"><i class="icon-plus"></i> 加入小组</a>
+        %endif
+        %if req.user and group.can_edit(req.user.id):
+        <a class="btn btn-warning" href="${group.path}edit"><i class="icon-edit"></i> 编辑</a>
+        %endif
+        <p>
+        </section>
+        <section>
+        %if req.user and group.is_joined(req.user.id):
+        <form class="inline-form" method="post" action="${group.path}add_member">
+        <span class="input-append">
+            <input type="text" name="q" placeholder="豆瓣id，邮箱">
+            <button type="submit" class="btn"><i class="icon-plus"></i> 拉人进组</button>
+        </span>
+        </form>
+        %endif
+        <a class="btn btn-success"
+            %if req.user and group.is_joined(req.user.id):
+            href="${group.path}new_thread"
+            %else:
+            href="" onclick="alert('加入本组才能发帖！');"
+            %endif
+            ><i class="icon-pencil"></i> 发新贴</a>
+        <a class="btn btn-info" onclick="rec('group', '${group.id}');"><i class="icon-share"></i> 推荐</a>
+        </section>
+        <ul class="unstyled">
+        %for t in group.threads():
+        <li>
+        <h4><a href="${t.path}">${t.title}</h4></a>
+        <p class="muted">${t.n_comment}个回复 · ${t.owner.name} · ${t.rtime}</p>
+        </li>
+        %endfor
+        </ul>
+        </section>
+		</div>
+		<div class="span4">
+            ${group_ui(group)}
+            <h3>创建本组的${group.m_name}</h3>
+            <p>
+            <img src="${group.owner.picture(default=True)}">
+            </p>
+            <h3>所有${group.m_name}们</h3>
+	        <div class="avatar-list clearfix">
+	        %for card in group.members:
+	        <a href="${card.path}">
+	            <img src="${card.owner.picture(default=True)}">
+	        </a>
+	        %endfor
+		</div>
+    </div>
+</div>
+
+<%def name="group_ui(group)">
+<div class="well">
+    %if group.photo_id:
+    <a href="${group.path}">
+    <img src="${group.photo}">
+    </a>
+    %endif
+    %if group.intro:
+    <p>
+    <br>
+    ${group.html_intro|n}</p>
+    %else:
+    还没有写描述
+    %endif
+</div>
+<p>
+%for t in group.tags:
+<a href="${SITE}${t.path}"><span class="label">${t.name}</span></a>
+%endfor
+</p>
+</%def>

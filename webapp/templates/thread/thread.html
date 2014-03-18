@@ -1,0 +1,26 @@
+<%inherit file="/base.html" />
+<%!
+from config import DEVELOP_MODE, LOGO
+from webapp.models.consts import EMOTICONS
+%>
+<%namespace name="blog_utils" file="/blog/utils.html" />
+<%namespace name="group_utils" file="/group/group.html" />
+<%def name="title()">Thread</%def>
+<div class="container">
+    <div class="row-fluid">
+        <h2>${thread.title}</h2>
+        <p class="muted">来自<a href="${thread.group.path}">${thread.group.name}</a> 
+        <a class="btn btn-info" href="${thread.group.path}join"><i class="icon-plus"></i> 加入小组</a>
+        <a class="btn btn-info" onclick="rec('thread', '${thread.id}');"><i class="icon-share"></i> 推荐</a>
+        </p>
+        <hr>
+        ${blog_utils.blog_ui(thread, True)}
+    </div>
+</div>
+<%def name="body_script()">
+<script>
+$(function () {
+    read_notify('${thread.id}');
+})
+</script>
+</%def>
